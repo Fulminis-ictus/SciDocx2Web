@@ -132,6 +132,16 @@ def ableIgnorePNum():
 
     return
 
+def ablePageNum():
+    '''Disables the "Which docx page should be counted..." input field if "Insert page numbers?" is unchecked. Does the opposite if it's checked.'''
+
+    if pageNumberCheckVar.get():
+        pageNumberStartCheckEntry.config(state="normal")
+    else:
+        pageNumberStartCheckEntry.config(state="disabled")
+
+    return
+
 def ableAbbreviateTooltips():
     '''Disables the "Abbreviate tooltips after how many symbols?" input field if "Add tooltips to footnotes?" is unchecked. Does the opposite if it's checked.'''
 
@@ -165,7 +175,9 @@ def saveOptions():
     config.set('Format templates', 'detectignorepnumentry', detectIgnorePNumEntry.get())
     config.set('Tooltips', 'tooltipscheckvar', str(tooltipsCheckVar.get()))
     config.set('Tooltips', 'abbreviatetooltipsentry', abbreviateTooltipsEntry.get())
-    config.set('Paragraphs', 'paragraphnumbercheckvar', str(paragraphNumberCheckVar.get()))
+    config.set('Citability', 'paragraphnumbercheckvar', str(paragraphNumberCheckVar.get()))
+    config.set('Citability', 'pagenumbercheckvar', str(pageNumberCheckVar.get()))
+    config.set('Citability', 'pagenumberstartcheckvar', str(pageNumberStartCheckEntry.get()))
 
     # write .ini file
     with open(iniLocation, "w") as configFile:
@@ -202,7 +214,9 @@ def resetOptions():
         config.set('Format templates', 'detectignorepnumentry', "FVMW IgnorePNum")
         config.set('Tooltips', 'tooltipscheckvar', "True")
         config.set('Tooltips', 'abbreviatetooltipsentry', "500")
-        config.set('Paragraphs', 'paragraphnumbercheckvar', "True")
+        config.set('Citability', 'paragraphnumbercheckvar', "False")
+        config.set('Citability', 'pagenumbercheckvar', "True")
+        config.set('Citability', 'pagenumberstartcheckvar', "1")
 
         # write to file
         with open(iniLocation, "w") as configFile:
@@ -234,7 +248,9 @@ def resetOptions():
         abbreviateTooltipsEntryText.set("500")
         abbreviateTooltipsEntry.configure(state="normal")
 
-        paragraphNumberCheckVar.set(True)
+        paragraphNumberCheckVar.set(False)
+        pageNumberCheckVar.set(True)
+        pageNumberStartCheckEntry.set("1")
 
         messagebox.showinfo("Reset successful", "Settings have been reset to original values.")
 
@@ -263,7 +279,9 @@ conf_detectbibliographyentry = config.get('Format templates', 'detecbibliography
 conf_detectignorepnumentry = config.get('Format templates', 'detectignorepnumentry')
 conf_tooltipscheckvar = config.getboolean('Tooltips', 'tooltipscheckvar')
 conf_abbreviatetooltipsentry = config.get('Tooltips', 'abbreviatetooltipsentry')
-conf_paragraphnumbercheckvar = config.getboolean('Paragraphs', 'paragraphnumbercheckvar')
+conf_paragraphnumbercheckvar = config.getboolean('Citability', 'paragraphnumbercheckvar')
+conf_pagenumbercheckvar = config.getboolean('Citability', 'pagenumbercheckvar')
+conf_pagenumberstartcheckvar = config.get('Citability', 'pagenumberstartcheckvar')
 
 ## INTERFACE SETUP
 # window
@@ -467,9 +485,9 @@ else:
     abbreviateTooltipsEntry.configure(state="disable")
 abbreviateTooltipsEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
 
-# --Paragraph settings--
+# --Citability settings--
 # frame
-framePar = tk.LabelFrame(scrollSecondFrame, text='Paragraph settings')
+framePar = tk.LabelFrame(scrollSecondFrame, text='Citability settings')
 framePar.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 # "Number the paragraphs?"
@@ -479,6 +497,24 @@ paragraphNumberCheckVar = tk.BooleanVar(value=conf_paragraphnumbercheckvar)
 paragraphNumberCheck = tk.Checkbutton(framePar, text='Number the paragraphs?',variable=paragraphNumberCheckVar, onvalue=True, offvalue=False, command=ableIgnorePNum)
 paragraphNumberCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,20))
 
+row += 1
+
+pageNumberCheckVar = tk.BooleanVar(value=conf_pagenumbercheckvar)
+pageNumberCheck = tk.Checkbutton(framePar, text='Insert page numbers?',variable=pageNumberCheckVar, onvalue=True, offvalue=False, command=ablePageNum)
+pageNumberCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,20))
+
+row += 1
+
+pageNumberStartCheckLabel = tk.Label(framePar, text='Which docx page should be counted as the first page?', justify="left")
+pageNumberStartCheckLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+pageNumberStartCheckEntryText = tk.StringVar(value=conf_pagenumberstartcheckvar)
+pageNumberStartCheckEntry = tk.Entry(framePar, textvariable=pageNumberStartCheckEntryText)
+if conf_pagenumbercheckvar:
+    pageNumberStartCheckEntry.configure(state="normal")
+else:
+    pageNumberStartCheckEntry.configure(state="disable")
+pageNumberStartCheckEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(25,20))
 
 # SEPARATOR
 separator = ttk.Separator(window, orient='horizontal')
@@ -582,7 +618,10 @@ gridcss = '''\n\t\t\t/* Grid */
     }'''
 
 # paragraphs
-paragraphcss = '\n\t\t\tp {font-size: 18px; color: #454545; text-align: left;}'
+paragraphcss = '\n\t\t\tp {font-size: 18px; color: #454545; text-align: left; line-height: 2;}'
+
+# pagenumbers
+pagenumbercss = '\t\t\t.pagenumber {font-size: 14px; color: #454545; text-align: left; font-weight:400; background-color: #E7E7E7;}'
 
 # buttons
 buttoncss = '\t\t\tbutton {font-size: 14px; text-align: left; width: 100%;}\n\t\t\tbutton a {display: block;}'
@@ -612,7 +651,7 @@ mediacaptioncss = '\t\t\t.mediacaption {display: block; font-size: 15px; color: 
 bibliographycss = '\t\t\t.bibliography {display: block; font-size: 18px; color: #454545; text-align: left; text-indent: -5%; margin-left: 5%;}'
 
 # assembly of css
-css = '<style>' + '\n' + bodycss + '\n' + tooltipcss + '\n' + gridcss + '\n' + paragraphcss + '\n\n' + buttoncss + '\n\n' + headingcss + '\n\n' + linkscss + '\n\n' + listscss + '\n\n' + tablecss + '\n\n' + hrcss + '\n\n' + blockquotecss + '\n\n' + mediacaptioncss + '\n\n' + bibliographycss + '\n' '\t\t</style>' + '\n\n'
+css = '<style>' + '\n' + bodycss + '\n' + tooltipcss + '\n' + gridcss + '\n' + paragraphcss + '\n' + pagenumbercss + '\n\n' + buttoncss + '\n\n' + headingcss + '\n\n' + linkscss + '\n\n' + listscss + '\n\n' + tablecss + '\n\n' + hrcss + '\n\n' + blockquotecss + '\n\n' + mediacaptioncss + '\n\n' + bibliographycss + '\n' '\t\t</style>' + '\n\n'
 
 # convert style code to XML element
 cssXML = etree.fromstring(css)
@@ -656,6 +695,9 @@ def convertAndExport():
     # add heading IDs
     bodyxml = SciConvert.add_Head_IDs(headingsIDVar.get(), bodyxml)
 
+    # remove TOCs
+    bodyxml = SciConvert.remove_toc_and_head(bodyxml)
+
     # create navigation
     findH1 = bodyxml.findall('.//h1')
     navigationElement = etree.Element('nav')
@@ -666,9 +708,6 @@ def convertAndExport():
     navGridDiv.attrib['class'] = 'navGrid'
     navGridDiv = SciConvert.create_navigation(navigationVar.get(), navigationTypeVar.get(), findH1, navigationElement, commentNavigation, h1Navigation, navGridDiv)
 
-    # remove TOCs
-    bodyxml = SciConvert.remove_toc_and_head(bodyxml)
-
     # add cite to blockquotes
     tooltiptextPath = './/sup/a[contains(@id, "footnote-ref")]'
     bodyxml = SciConvert.add_cite(tooltiptextPath, bodyxml, footnotes)
@@ -678,6 +717,9 @@ def convertAndExport():
 
     # move table captions
     bodyxml = SciConvert.move_table_caption(bodyxml)
+
+    # create page breaks
+    bodyxml = SciConvert.page_breaks(pageNumberCheckVar.get(), pageNumberStartCheckEntry.get(), bodyxml)
 
     # number paragraphs
     bodyxml = SciConvert.paragraph_numbering(paragraphNumberCheckVar.get(), bodyxml)

@@ -7,8 +7,8 @@ Created on March 30th, 2023\n
 Author: Tim Reichert\n
 Version: 1.0
 
-Based on Mammoth: https://github.com/mwilliamson/python-mammoth
-Makes use of dwasyl's added page break detection functionailty: https://github.com/dwasyl/python-mammoth
+Based on Mammoth: https://github.com/mwilliamson/python-mammoth\n
+Makes use of dwasyl's added page break detection functionailty: https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4
 """
 
 ### IMPORTS ###
@@ -28,7 +28,7 @@ from tkinter import messagebox
 #- Highlight section you're currently scrolling through in navbar.
 #- Implement "aria" attributes for higher accessibility.
 #- Escape characters that have a specific format template to make sure HTML-Code in the Word file displays as it should.
-#- Add option to implement page breaks.
+#- Make sections for pages.
 
 ### MAIN CODE ###
 ## STYLE MAP
@@ -64,7 +64,7 @@ def enclose_body(input, bodyCheckVar, pageTitleEntryText):
     If "Only export the body?" is unchecked:
     Adds <html>, <head> and <title> elements. Also sets the charset to UTF-8 and adds the page title if the "Page title" field isn't empty.
     
-    Additionally, the grid container and main grid <div> tags are inserted.'''
+    Additionally, the grid container and main grid <div> tags are inserted and the page markers are unescaped.'''
 
     # "Only export the body?" is checked
     if bodyCheckVar:
@@ -77,6 +77,10 @@ def enclose_body(input, bodyCheckVar, pageTitleEntryText):
     # "Only export the body?" is unchecked and the page title field is empty
     else:
         bodyxml = f'<html><head><meta charset=\"UTF-8\"></meta></head><body><div class="gridContainer"><div class="mainGrid">' + input + '</div></div></body></html>'
+
+    # unescape new page markers
+    bodyxml = re.sub(r'&lt;sub class=&quot;pagenumber&quot;&gt;NEW_PAGE_BEGINNING!&lt;/sub&gt;', r'<sub class="pagenumber">NEW_PAGE_BEGINNING!</sub>', bodyxml)
+
     bodyxml = etree.fromstring(bodyxml)
 
     return bodyxml
@@ -142,7 +146,7 @@ def add_wbr_footnotes(footnotesAbbr, abbreviateFootnotesNumber):
     else:
         for i in range(len(footnotesAbbr)):
             if re.compile(r'(<a.*?>)').search(footnotesAbbr[i]): # check if a link exists in the footnote before proceeding. Otherwise it will add wbr tags to the whole footnote instead of just the part within a tags.
-                replace = re.sub(r'(.*?)(<a.*?>)(.*?)(</a>)(.*?)', r'\3', footnotesAbbr[i])
+                replace = re.sub(r'(.*?)(<a.*?>)(.*?)(</a>)(.*)', r'\3', footnotesAbbr[i])
                 replace = re.sub(r'/', r'/<wbr>', replace)
                 footnotesAbbr[i] = re.sub(r'(<a.*?>)(.*?)(</a>)', r'\1' + f'{replace}' + r'\3', footnotesAbbr[i])
 
@@ -250,39 +254,6 @@ def add_Head_IDs(headingsIDVar, bodyxml):
 
     return bodyxml
 
-def create_navigation(navigationVar, navigationTypeVar, findH1, navigationElement, commentNavigation, h1Navigation, navGridDiv):
-    '''If "Create navigation?" is checked:
-    Creates a navigation by compiling a list of all <h1> elements. Each navigation item is a paragraph or a button, depending on which radio button option is activated in the GUI. Adds links with href attributes that link each navigation item to their respective heading following the form "#headingN" where "N" is an integer counting upwards.
-    
-    Example: <button><a href="#heading1">Navigation to first heading</a></button>
-
-    When compiling the headings text, the <h1> tags are removed.
-    
-    Encloses everything with a <div> with the class "navGrid".'''
-
-    if navigationVar:
-        if findH1 != None:
-            i = 1
-            for node in findH1:
-                if navigationTypeVar == 'paragraph':
-                    elementPorB = etree.Element('p')
-                else:
-                    elementPorB = etree.Element('button')
-                a = etree.SubElement(elementPorB, 'a')
-                a.attrib['href'] = '#heading' + str(i)
-                headingsText = etree.tostring(node).decode('utf-8')
-                headingsText = re.sub(r'(<h1 .*?>)(.*?)(</h1>)', r'\2', headingsText)
-                a.text = headingsText
-                navigationElement.append(elementPorB)
-                i += 1
-            
-            # create navigation grid
-            navGridDiv.append(commentNavigation)
-            navGridDiv.append(h1Navigation)
-            navGridDiv.append(navigationElement)
-
-    return navGridDiv
-
 def remove_toc_and_head(bodyxml):
     '''Removes Word's "Table Of Contents" and "_heading" IDs. Both of those consist of non-closed "a"-tags that lead to display errors.'''
 
@@ -305,6 +276,40 @@ def remove_toc_and_head(bodyxml):
                 node.text = tail
 
     return bodyxml
+
+def create_navigation(navigationVar, navigationTypeVar, findH1, navigationElement, commentNavigation, h1Navigation, navGridDiv):
+    '''If "Create navigation?" is checked:
+    Creates a navigation by compiling a list of all <h1> elements. Each navigation item is a paragraph or a button, depending on which radio button option is activated in the GUI. Adds links with href attributes that link each navigation item to their respective heading following the form "#headingN" where "N" is an integer counting upwards.
+    
+    Example: <button><a href="#heading1">Navigation to first heading</a></button>
+
+    When compiling the headings text, the <h1> tags are removed.
+    
+    Encloses everything with a <div> with the class "navGrid".'''
+
+    if navigationVar:
+        if findH1 != None:
+            i = 1
+            for node in findH1:
+                if navigationTypeVar == 'paragraph':
+                    elementPorB = etree.Element('p')
+                else:
+                    elementPorB = etree.Element('button')
+                a = etree.SubElement(elementPorB, 'a')
+                a.attrib['href'] = '#heading' + str(i)
+                headingsText = etree.tostring(node).decode('utf-8')
+                headingsText = re.sub(r'(<h1 .*?>)(.*?)(</h1>)', r'\2', headingsText)
+                headingsText = re.sub(r'(<sub class="pagenumber">NEW_PAGE_BEGINNING!</sub>)', r'', headingsText)
+                a.text = headingsText
+                navigationElement.append(elementPorB)
+                i += 1
+            
+            # create navigation grid
+            navGridDiv.append(commentNavigation)
+            navGridDiv.append(h1Navigation)
+            navGridDiv.append(navigationElement)
+
+    return navGridDiv
 
 def add_cite(tooltiptextPath, bodyxml, footnotes):
     '''Adds a cite attribute to <blockquote> elements. Inserts the footnote text as the cite value by using the footnote number at the end of the blockquote as the index of the footnote list.'''
@@ -332,6 +337,26 @@ def move_table_caption(bodyxml):
     for node in bodyxml.xpath('//caption'):
         if node.getprevious().tag == 'table':
             node.getprevious().insert(0, node)
+
+    return bodyxml
+
+def page_breaks(pageNumberCheckVar, pageNumberStartCheckVar, bodyxml):
+    '''If "Insert page numbers?" is checked:
+    Find <sub class="pagenumber"> tags that denote a new page beginning and insert a page number.
+    
+    Else:
+    Find <sub class="pagenumber"> tags that denote a new page beginning but delete their content.'''
+
+    if pageNumberCheckVar and pageNumberStartCheckVar != "":
+        if pageNumberStartCheckVar.isdigit():
+            i = int(pageNumberStartCheckVar) + 1
+
+            for pageNumber in bodyxml.xpath('.//sub[@class="pagenumber"]'):
+                pageNumber.text = '{' + str(i) + '}'
+                i += 1
+        else:
+            messagebox.showerror('Page number insertion unsuccessful', 'The file conversion will continue but the page number abbreviation was unsuccessful. The starting page number input field only accepts integers.')
+            pageNumber.text = ''
 
     return bodyxml
 
