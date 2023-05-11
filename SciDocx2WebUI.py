@@ -15,8 +15,6 @@ Makes use of dwasyl's added page break detection functionailty: https://github.c
 
 #Extraction and Conversion modules
 import mammoth #Convert docx to html
-from docx2python import docx2python #Used for extracting a list of footnotes
-import pandas #Used to flatten the footnotes list
 from lxml import etree #XML and XPath functionality
 
 #Path
@@ -631,14 +629,14 @@ def convertAndExport():
     input = mammoth.convert_to_html(inputPath, style_map=custom_style_map).value
     bodyxml = SciConvert.enclose_body(input, bodyCheckVar.get(), pageTitleEntry.get())
 
-    # convert footnotes
-    footnotes = docx2python(inputPath, html=True).footnotes
-    footnotes = list(pandas.core.common.flatten(footnotes))
-    footnotes = SciConvert.create_footnotes_list(footnotes, abbreviateTooltipsEntry.get())
+    # create footnotes
+    footnotes = SciConvert.create_footnotes_list(bodyxml, abbreviateTooltipsEntry.get())
+
+    # abbreviate footnotes
     footnotesAbbr = SciConvert.abbreviate_footnotes(footnotes, abbreviateTooltipsEntry.get())
 
     # add wbr to footnotes
-    footnotesAbbr = SciConvert.add_wbr_footnotes(footnotesAbbr)
+    footnotesAbbr = SciConvert.add_wbr_footnotes(footnotesAbbr, abbreviateTooltipsEntry.get())
 
     # insert footnotes into main text    
     bodyxml = SciConvert.insert_footnotes(tooltipsCheckVar.get(), bodyxml, footnotesAbbr)

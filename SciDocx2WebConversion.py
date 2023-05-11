@@ -22,7 +22,6 @@ from html import unescape # Replace HTML entities with their actual symbols
 from tkinter import messagebox
 
 ### POSSIBLE FUTURE TODO'S ###
-#- Replace Docx2Python with a custom function that generates a footnotes list.
 #- Let users define the style map themselves (additional option on top of the already existing option with input fields).
 #- Create more heading orders (up to 3 in total).
 #- Automatically create sections based on the headings.
@@ -83,25 +82,28 @@ def enclose_body(input, bodyCheckVar, pageTitleEntryText):
     return bodyxml
 
 ## FOOTNOTES
-def create_footnotes_list(footnotes, abbreviateFootnotesNumber):
-    '''Flattens the nested footnotes that were imported with docx2python and reformats them:
-
-    Replaces "footnoteN) Footnote content" with just "Footnote content".
-
-    If the footnote abbreviation field is not empty:
-    Deletes all tags to prevent tags that are never closed due to the abbreviation process.
+def create_footnotes_list(bodyxml, abbreviateFootnotesNumber):
+    '''Compiles a list of footnotes. Iterate over all li elements in the footnote list created by mammoth and save their contents to a python list.
+    
+    If footnotes aren't abbreviated:
+    Get the footnote text with all HTML tags.
     
     Else:
-    Only removes spans, which usually feature unwanted color stylings.
-    
-    Example: "footnoteN This is a <span>footnote.</span>" -> "This is a footnote."'''
+    Get footnote text without HTML tags to prevent tags that are never closed due to the abbreviation process.'''
 
-    for i in range(len(footnotes)):
-        if abbreviateFootnotesNumber != "":
-            footnotes[i] = re.sub(r'(<.*?>)', r'', footnotes[i])
-        else:
-            footnotes[i] = re.sub(r'(<span)(.*?)(>)(.*?)(</span>)', r'\4', footnotes[i])
-        footnotes[i] = re.sub(r'(footnote)(\d+)\)\t (.*)', r'\3', footnotes[i])
+    footnotes = []
+
+    for ol in bodyxml.xpath('.//li[@id="footnote-1"]/..'):
+        for li in ol:
+            for p in li:
+                if abbreviateFootnotesNumber != "":
+                    footnoteText = ''.join(p.itertext())
+                    footnoteText = re.sub(r' ↑', r'', footnoteText)
+                    footnotes.append(footnoteText)
+                else:
+                    footnoteText = etree.tostring(p).decode('utf-8')
+                    footnoteText = re.sub(r'(<p>)(.*?)(<a href="#footnote-ref)(.*)', r'\2', footnoteText)
+                    footnotes.append(footnoteText)
 
     return footnotes
 
@@ -125,11 +127,24 @@ def abbreviate_footnotes(footnotes, abbreviateFootnotesNumber):
 
     return footnotes
 
-def add_wbr_footnotes(footnotesAbbr):
-    '''Finds all slashes within footnotes and adds <wbr> tags after them to ensure that links automatically receive a line break when necessary.'''
+def add_wbr_footnotes(footnotesAbbr, abbreviateFootnotesNumber):
+    '''Finds all slashes within footnotes and adds <wbr> tags after them to ensure that links automatically receive a line break when necessary. 
+    
+    If footnotes are abbreviated: 
+    Apply to all text. Since all HTML tags have been removed in a previous step there's no need to worry about HTML tags being affected.
+    
+    Else: 
+    Look for text in <a> tags specifically so that other HTML tags aren't affected.'''
 
-    for i in range(len(footnotesAbbr)):
-        footnotesAbbr[i] = re.sub(r'/', r'/<wbr>', footnotesAbbr[i])
+    if abbreviateFootnotesNumber != "":
+        for i in range(len(footnotesAbbr)):
+            footnotesAbbr[i] = re.sub(r'/', r'/<wbr>', footnotesAbbr[i])
+    else:
+        for i in range(len(footnotesAbbr)):
+            if re.compile(r'(<a.*?>)').search(footnotesAbbr[i]): # check if a link exists in the footnote before proceeding. Otherwise it will add wbr tags to the whole footnote instead of just the part within a tags.
+                replace = re.sub(r'(.*?)(<a.*?>)(.*?)(</a>)(.*?)', r'\3', footnotesAbbr[i])
+                replace = re.sub(r'/', r'/<wbr>', replace)
+                footnotesAbbr[i] = re.sub(r'(<a.*?>)(.*?)(</a>)', r'\1' + f'{replace}' + r'\3', footnotesAbbr[i])
 
     return footnotesAbbr
 
@@ -141,7 +156,7 @@ def insert_footnotes(tooltipsCheckVar, bodyxml, footnotesAbbr):
     <span class="tooltip"><sup><a href="#footnote-N" id="footnote-ref-N">[N]</a><span class="tooltiptext">Footnote content.</span></sup></span>'''
 
     if tooltipsCheckVar:
-        i = 1
+        i = 0
         for node in bodyxml.xpath('//sup/a[contains(@id, "footnote-ref")]/..'): 
             # create tooltip and tooltip text <span>s
             tooltiptextSpan = etree.Element('span')
@@ -150,7 +165,7 @@ def insert_footnotes(tooltipsCheckVar, bodyxml, footnotesAbbr):
             tooltipSpan.attrib['class'] = 'tooltip'
 
             # insert footnote text and append tooltiptext <span> to end of current footnote sections 
-            tooltiptextSpan.text = footnotesAbbr[i+1]
+            tooltiptextSpan.text = footnotesAbbr[i]
             node.append(tooltiptextSpan)
 
             # enclose footnote sections (including the tooltiptext <span>s) with tooltip <span>s
@@ -215,9 +230,9 @@ def footnotes_bottom_separate(bodyxml, commentBottomFootnotes, breakElement, hrE
 def add_wbr_text(bodyxml):
     '''Finds all slashes in links within the main text and adds <wbr> tags after them to ensure that links automatically receive a line break when necessary.'''
 
-    for node in bodyxml.xpath('//a'):
-        if node.text != None:
-            node.text = re.sub(r'/', r'/<wbr>', node.text)
+    for a in bodyxml.xpath('//a'):
+        if a.text != None:
+            a.text = re.sub(r'/', r'/<wbr>', a.text)
 
     return bodyxml
 
@@ -237,9 +252,11 @@ def add_Head_IDs(headingsIDVar, bodyxml):
 
 def create_navigation(navigationVar, navigationTypeVar, findH1, navigationElement, commentNavigation, h1Navigation, navGridDiv):
     '''If "Create navigation?" is checked:
-    Creates a navigation by compiling a list of all <h1> elements. Each navigation item is a paragraph or a button, depending on which radio button option is activated. Adds links with href attributes that link each navigation item to their respective heading following the form "#headingN" where "N" is an integer counting upwards.
+    Creates a navigation by compiling a list of all <h1> elements. Each navigation item is a paragraph or a button, depending on which radio button option is activated in the GUI. Adds links with href attributes that link each navigation item to their respective heading following the form "#headingN" where "N" is an integer counting upwards.
     
     Example: <button><a href="#heading1">Navigation to first heading</a></button>
+
+    When compiling the headings text, the <h1> tags are removed.
     
     Encloses everything with a <div> with the class "navGrid".'''
 
@@ -253,7 +270,9 @@ def create_navigation(navigationVar, navigationTypeVar, findH1, navigationElemen
                     elementPorB = etree.Element('button')
                 a = etree.SubElement(elementPorB, 'a')
                 a.attrib['href'] = '#heading' + str(i)
-                a.text = ''.join(node.itertext()) # makes sure it receives the full text without it stopping at inner tags
+                headingsText = etree.tostring(node).decode('utf-8')
+                headingsText = re.sub(r'(<h1 .*?>)(.*?)(</h1>)', r'\2', headingsText)
+                a.text = headingsText
                 navigationElement.append(elementPorB)
                 i += 1
             
