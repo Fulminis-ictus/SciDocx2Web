@@ -23,19 +23,19 @@ from html import escape # Re-add escape characters in example HTML code inside <
 from tkinter import messagebox
 
 ### POSSIBLE FUTURE TODO'S ###
-#- Let users define the style map themselves (additional option on top of the already existing option with input fields).
-#- Create more heading orders (up to 3 in total).
 #- Automatically create sections based on the headings.
 #- Highlight section you're currently scrolling through in navbar.
-#- Implement "aria" attributes for higher accessibility.
 #- Make sections for pages.
+#- Implement "aria" attributes for higher accessibility.
 
 ### MAIN CODE ###
 ## STYLE MAP
-def style_map_func(custom_style_map, headings, media, blockquotes, tableCaptions, bibliography, ignorePNum, paragraphNumberCheck, code):
+def style_map_func(custom_style_map, headings1, headings2, headings3, media, blockquotes, tableCaptions, bibliography, ignorePNum, paragraphNumberCheck, code, addStyleMap):
     '''Generates a style map based on the text in the input fields within the format template options section. Empty input fields are ignored. The style map detects templates applied to text and encloses them with an html element. For more information see: https://github.com/mwilliamson/python-mammoth#custom-style-map
     
-    Headings -> h1:fresh
+    Headings1 -> h1:fresh
+    Headings2 -> h2:fresh
+    Headings3 -> h3:fresh
     Media -> p.mediacaption:fresh
     Blockquotes -> blockquote:fresh
     Table Captions -> caption:fresh
@@ -43,8 +43,12 @@ def style_map_func(custom_style_map, headings, media, blockquotes, tableCaptions
     Ignore Paragraph Numbering -> p.ignorePNum:fresh
     Code -> code'''
 
-    if headings != "":
-        custom_style_map += f"p[style-name='{headings}'] => h1:fresh"
+    if headings1 != "":
+        custom_style_map += f"p[style-name='{headings1}'] => h1:fresh"
+    if headings2 != "":
+        custom_style_map += f"\np[style-name='{headings2}'] => h2:fresh"
+    if headings3 != "":
+        custom_style_map += f"\np[style-name='{headings3}'] => h3:fresh"
     if media != "":
         custom_style_map += f"\np[style-name='{media}'] => p.mediacaption:fresh"
     if blockquotes != "":
@@ -57,6 +61,10 @@ def style_map_func(custom_style_map, headings, media, blockquotes, tableCaptions
         custom_style_map += f"\np[style-name='{ignorePNum}'] => p.ignorePNum:fresh"
     if code != "":
         custom_style_map += f"\np[style-name='{code}'] => code:fresh"
+    if addStyleMap != "":
+        custom_style_map += "\n" + addStyleMap
+
+    print(custom_style_map)
 
     return custom_style_map
 

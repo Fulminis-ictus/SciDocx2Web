@@ -25,6 +25,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
+from tkinter import scrolledtext
 
 #Saving to and loading from .ini
 from configparser import ConfigParser
@@ -167,13 +168,16 @@ def saveOptions():
     config.set("Heading IDs and nav", "headingsidvar", str(headingsIDVar.get()))
     config.set("Heading IDs and nav", "navigationvar", str(navigationVar.get()))
     config.set("Heading IDs and nav", "navigationtypevar", navigationTypeVar.get())
-    config.set('Format templates', 'detectheadingsentry', detectHeadingsEntry.get())
+    config.set('Format templates', 'detectheadingsentry1', detectHeadingsEntry1.get())
+    config.set('Format templates', 'detectheadingsentry2', detectHeadingsEntry2.get())
+    config.set('Format templates', 'detectheadingsentry3', detectHeadingsEntry3.get())
     config.set('Format templates', 'detectMediaentry', detectMediaEntry.get())
     config.set('Format templates', 'detectblockquotesentry', detectBlockquotesEntry.get())
     config.set('Format templates', 'detecttablecaptionsentry', detectTableCaptionsEntry.get())
     config.set('Format templates', 'detectBibliographyentry', detectBibliographyEntry.get())
     config.set('Format templates', 'detectignorepnumentry', detectIgnorePNumEntry.get())
-    config.set('Format templates', 'detecodeentry', detectCodeEntry.get())
+    config.set('Format templates', 'detectcodeentry', detectCodeEntry.get())
+    config.set('Format templates', 'customstylemap', customStyleMapEntry.get('1.0', 'end'))
     config.set('Tooltips', 'tooltipscheckvar', str(tooltipsCheckVar.get()))
     config.set('Tooltips', 'abbreviatetooltipsentry', abbreviateTooltipsEntry.get())
     config.set('Citability', 'paragraphnumbercheckvar', str(paragraphNumberCheckVar.get()))
@@ -207,17 +211,20 @@ def resetOptions():
         config.set("Heading IDs and nav", "headingsidvar", "True")
         config.set("Heading IDs and nav", "navigationvar", "False")
         config.set("Heading IDs and nav", "navigationtypevar", "paragraph")
-        config.set('Format templates', 'detectheadingsentry', "FVMW Heading")
+        config.set('Format templates', 'detectheadingsentry1', "FVMW Heading")
+        config.set('Format templates', 'detectheadingsentry2', "FVMW Heading2")
+        config.set('Format templates', 'detectheadingsentry3', "FVMW Heading3")
         config.set('Format templates', 'detectMediaentry', "FVMW Media")
         config.set('Format templates', 'detectblockquotesentry', "FVMW Blockquote")
         config.set('Format templates', 'detecttablecaptionsentry', "FVMW TableCaption")
         config.set('Format templates', 'detectbibliographyentry', "FVMW Bibliography")
         config.set('Format templates', 'detectignorepnumentry', "FVMW IgnorePNum")
         config.set('Format templates', 'detectcodeentry', "FVMW Code")
+        config.set('Format templates', 'customstylemap', "")
         config.set('Tooltips', 'tooltipscheckvar', "True")
         config.set('Tooltips', 'abbreviatetooltipsentry', "500")
-        config.set('Citability', 'paragraphnumbercheckvar', "False")
-        config.set('Citability', 'pagenumbercheckvar', "True")
+        config.set('Citability', 'paragraphnumbercheckvar', "True")
+        config.set('Citability', 'pagenumbercheckvar', "False")
         config.set('Citability', 'pagenumberstartcheckvar', "1")
 
         # write to file
@@ -238,7 +245,9 @@ def resetOptions():
         navigationPar.configure(state="disabled")
         navigationBut.configure(state="disabled")
 
-        detectHeadingsEntryText.set("FVMW Heading")
+        detectHeadingsEntry1Text.set("FVMW Heading")
+        detectHeadingsEntry2Text.set("FVMW Heading2")
+        detectHeadingsEntry3Text.set("FVMW Heading3")
         detectMediaEntryText.set("FVMW Media")
         detectBlockquotesEntryText.set("FVMW Blockquote")
         detectTableCaptionsEntryText.set("FVMW TableCaption")
@@ -246,14 +255,15 @@ def resetOptions():
         detectIgnorePNumEntryText.set("FVMW IgnorePNum")
         detectIgnorePNumEntry.configure(state="normal")
         detectCodeEntryText.set("FVMW Code")
+        customStyleMapEntry.delete("1.0", "end")
 
         tooltipsCheckVar.set(True)
         abbreviateTooltipsEntryText.set("500")
         abbreviateTooltipsEntry.configure(state="normal")
 
-        paragraphNumberCheckVar.set(False)
-        pageNumberCheckVar.set(True)
-        pageNumberStartCheckEntry.set("1")
+        paragraphNumberCheckVar.set(True)
+        pageNumberCheckVar.set(False)
+        pageNumberStartCheckEntryText.set("1")
 
         messagebox.showinfo("Reset successful", "Settings have been reset to original values.")
 
@@ -274,13 +284,16 @@ conf_pagetitleentrytext = config.get('Body and head', 'pagetitleentrytext')
 conf_headingsidvar = config.getboolean('Heading IDs and nav', 'headingsidvar')
 conf_navigationvar = config.getboolean('Heading IDs and nav', 'navigationvar')
 conf_navigationtypevar = config.get('Heading IDs and nav', 'navigationtypevar')
-conf_detectheadingsentry = config.get('Format templates', 'detectheadingsentry')
+conf_detectheadingsentry1 = config.get('Format templates', 'detectheadingsentry1')
+conf_detectheadingsentry2 = config.get('Format templates', 'detectheadingsentry2')
+conf_detectheadingsentry3 = config.get('Format templates', 'detectheadingsentry3')
 conf_detectmediaentry = config.get('Format templates', 'detectMediaentry')
 conf_detectblockquotesentry = config.get('Format templates', 'detectblockquotesentry')
 conf_detecttablecaptionsentry = config.get('Format templates', 'detecttablecaptionsentry')
 conf_detectbibliographyentry = config.get('Format templates', 'detecbibliographyentry')
 conf_detectignorepnumentry = config.get('Format templates', 'detectignorepnumentry')
 conf_detectcodeentry = config.get('Format templates', 'detectcodeentry')
+conf_customstylemap = config.get('Format templates', 'customstylemap')
 conf_tooltipscheckvar = config.getboolean('Tooltips', 'tooltipscheckvar')
 conf_abbreviatetooltipsentry = config.get('Tooltips', 'abbreviatetooltipsentry')
 conf_paragraphnumbercheckvar = config.getboolean('Citability', 'paragraphnumbercheckvar')
@@ -292,6 +305,16 @@ conf_pagenumberstartcheckvar = config.get('Citability', 'pagenumberstartcheckvar
 window = tk.Tk()
 window.title('SciDocx2Web')
 window.resizable(False, False)
+
+"""# notebook
+notebook = ttk.Notebook(window)
+tab1 = ttk.Frame(notebook)
+tab2 = ttk.Frame(notebook)
+
+notebook.add(tab1, text="General")
+notebook.add(tab2, text="Style Map")
+
+notebook.grid()"""
 
 # add scrollbar
 scrollCanvas = tk.Canvas(window, width=600, height=450)
@@ -402,12 +425,24 @@ frameDetection.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 # "Detect headings..."
 row += 1
 
-detectHeadingsLabel = tk.Label(frameDetection, text='Detect headings by which format template name?\nLeave empty to skip detection.', justify="left")
+detectHeadingsLabel = tk.Label(frameDetection, text='Detect headings by which format template name?\n1. order (h1), 2. order (h2) and 3. order (h3).\nLeave empty to skip detection.', justify="left")
 detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
-detectHeadingsEntryText = tk.StringVar(value=conf_detectheadingsentry)
-detectHeadingsEntry = tk.Entry(frameDetection, textvariable=detectHeadingsEntryText)
-detectHeadingsEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+detectHeadingsEntry1Text = tk.StringVar(value=conf_detectheadingsentry1)
+detectHeadingsEntry1 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry1Text)
+detectHeadingsEntry1.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+row += 1
+
+detectHeadingsEntry2Text = tk.StringVar(value=conf_detectheadingsentry2)
+detectHeadingsEntry2 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry2Text)
+detectHeadingsEntry2.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+row += 1
+
+detectHeadingsEntry3Text = tk.StringVar(value=conf_detectheadingsentry3)
+detectHeadingsEntry3 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry3Text)
+detectHeadingsEntry3.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
 
 # "Detect media placeholders..."
 row += 1
@@ -473,6 +508,19 @@ detectCodeEntryText = tk.StringVar(value=conf_detectcodeentry)
 detectCodeEntry = tk.Entry(frameDetection, textvariable=detectCodeEntryText)
 detectCodeEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
 
+# "Custom style map"
+row += 1
+
+customStyleMapLabel =tk.Label(frameDetection, text='Additional custom style map entries.', justify="left")
+customStyleMapLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+row += 1
+
+customStyleMapEntryText = tk.StringVar(value=conf_customstylemap)
+customStyleMapEntry = scrolledtext.ScrolledText(frameDetection, width=60, height=20)
+customStyleMapEntry.insert('1.0', customStyleMapEntryText.get())
+customStyleMapEntry.grid(sticky="W", row=row, column=0, columnspan=2, pady=(10, 10), padx=(20,20))
+
 # --Tooltips settings--
 # frame
 frameTooltips = tk.LabelFrame(scrollSecondFrame, text='Tooltips settings')
@@ -529,6 +577,7 @@ if conf_pagenumbercheckvar:
 else:
     pageNumberStartCheckEntry.configure(state="disable")
 pageNumberStartCheckEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(25,20))
+
 
 # SEPARATOR
 separator = ttk.Separator(window, orient='horizontal')
@@ -641,7 +690,7 @@ pagenumbercss = '\t\t\t.pagenumber {font-size: 14px; color: #454545; text-align:
 buttoncss = '\t\t\tbutton {font-size: 14px; text-align: left; width: 100%;}\n\t\t\tbutton a {display: block;}'
 
 # headings
-headingcss = '\t\t\th1 {font-size: 28px; color: #454545; text-align: left; padding-top: 18px; padding-bottom: 6px;}'
+headingcss = '\t\t\th1, h2, h3 {font-size: 28px; color: #454545; text-align: left; padding-top: 18px; padding-bottom: 6px;}'
 
 # links
 linkscss = '\t\t\ta:link {color: #0000ff; text-decoration:none;}\n\t\t\ta:visited {color: #800080; text-decoration:none;}'
@@ -676,7 +725,7 @@ def convertAndExport():
     '''Converts a DOCX file to an HTML file and exports it by calling functions from SciDocx2WebConversion.py. Displays a "Success" message if conversion was successful.'''
 
     # style map
-    custom_style_map = SciConvert.style_map_func("", detectHeadingsEntry.get(), detectMediaEntry.get(), detectBlockquotesEntry.get(), detectTableCaptionsEntry.get(), detectBibliographyEntry.get(), detectIgnorePNumEntry.get(), paragraphNumberCheckVar.get(), detectCodeEntry.get())
+    custom_style_map = SciConvert.style_map_func("", detectHeadingsEntry1.get(), detectHeadingsEntry2.get(), detectHeadingsEntry3.get(), detectMediaEntry.get(), detectBlockquotesEntry.get(), detectTableCaptionsEntry.get(), detectBibliographyEntry.get(), detectIgnorePNumEntry.get(), paragraphNumberCheckVar.get(), detectCodeEntry.get(), customStyleMapEntry.get('1.0', 'end'))
 
     # import and enclose input file with tags
     input = mammoth.convert_to_html(inputPath, style_map=custom_style_map).value
