@@ -23,6 +23,7 @@ from html import escape # Re-add escape characters in example HTML code inside <
 from tkinter import messagebox
 
 ### POSSIBLE FUTURE TODO'S ###
+#- Add IDs to h2 and h3 headings
 #- Automatically create sections based on the headings.
 #- Highlight section you're currently scrolling through in navbar.
 #- Make sections for pages.
@@ -63,8 +64,6 @@ def style_map_func(custom_style_map, headings1, headings2, headings3, media, blo
         custom_style_map += f"\np[style-name='{code}'] => code:fresh"
     if addStyleMap != "":
         custom_style_map += "\n" + addStyleMap
-
-    print(custom_style_map)
 
     return custom_style_map
 
@@ -392,7 +391,35 @@ def paragraph_numbering(paragraphNumberCheckVar, bodyxml):
 
     return bodyxml
 
-def assemble_html(navigationVar, bodyCheckVar, cssCheckVar, cssXML, navGridDiv, bodyxml):
+def create_sections(bodyxml):
+    # find h1, h2 or h3 headings.
+    # insert everything between found heading and next heading into section.
+
+    #for heading in bodyxml.xpath('.//h1|.//h2|.//h3'):
+    #    print(etree.tostring(heading))
+
+    #headings = bodyxml.findall(".//h1")
+    findH1 = bodyxml.findall('.//h1')
+
+    for heading in findH1:
+        elements = bodyxml.xpath('.//' + heading.tag + '[@id="' + heading.attrib["id"] + '"]/following-sibling::h1[1]/preceding-sibling::*')
+        print(elements)
+        elements.reverse()
+
+        section = etree.Element('section')
+        bodyxml.xpath('.//' + heading.tag + '[@id="' + heading.attrib["id"] + '"]')[0].addprevious(section)
+
+        for element in elements:
+            section.insert(0, element)
+        
+        #print(bodyxml.getelementpath(heading))
+    #print(findH1)
+    #headings = bodyxml.xpath('.//h1/following-sibling::h1[1]/preceding-sibling::*')
+    #print(headings)
+
+    return bodyxml
+
+def assemble_html(navigationVar, bodyCheckVar, cssCheckVar, cssXML, navGridDiv, bodyxml, javascriptXML, javascriptCheckVar):
     '''Assembles the individual sections (navigation, css, body) and writes them to an html file.
     
     If "Create navigation?" is unchecked:
@@ -410,6 +437,10 @@ def assemble_html(navigationVar, bodyCheckVar, cssCheckVar, cssXML, navGridDiv, 
             bodyxml[0].insert(0, navGridDiv)
         else:
             bodyxml[1][0].insert(0, navGridDiv)
+
+    # javascript
+    if javascriptCheckVar:
+        bodyxml[0].insert(0, javascriptXML)
 
     # css
     if cssCheckVar:

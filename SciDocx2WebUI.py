@@ -85,16 +85,19 @@ def submitFunc():
     return
 
 # enable/disable fields depending on what other fields are enabled or disabled and reset variables if necessary
-def ablePageTitleAndCss():
-    '''Disables the "Page title" entry and "Add suggested css?" checkbox if "Only export the body?" is checked. Does the opposite if it's unchecked.'''
+def ablePageTitleAndCssAndJavascript():
+    '''Disables the "Page title" entry, "Add suggested css?" checkbox and "Add javascript to highlight navigation while scrolling?" checkbox if "Only export the body?" is checked. Does the opposite if it's unchecked.'''
 
     if bodyCheckVar.get():
         pageTitleEntry.config(state="disabled")
         cssCheck.config(state="disabled")
         cssCheckVar.set(False)
+        javascriptCheck.config(state="disabled")
+        javascriptCheckVar.set(False)
     else:
         pageTitleEntry.config(state="normal")
         cssCheck.config(state="normal")
+        javascriptCheck.config(state="normal")
 
     return
 
@@ -164,6 +167,7 @@ def saveOptions():
     # set to new values
     config.set("Body and head", "bodyCheckVar", str(bodyCheckVar.get()))
     config.set('Body and head', 'csscheckvar', str(cssCheckVar.get()))
+    config.set('Body and head', 'javascriptcheckvar', str(javascriptCheckVar.get()))
     config.set("Body and head", "pagetitleentrytext", pageTitleEntry.get())
     config.set("Heading IDs and nav", "headingsidvar", str(headingsIDVar.get()))
     config.set("Heading IDs and nav", "navigationvar", str(navigationVar.get()))
@@ -207,6 +211,7 @@ def resetOptions():
         # reset to default values
         config.set("Body and head", "bodyCheckVar", "True")
         config.set('Body and head', 'csscheckvar', "False")
+        config.set('Body and head', 'javascriptcheckvar', "False")
         config.set("Body and head", "pagetitleentrytext", "")
         config.set("Heading IDs and nav", "headingsidvar", "True")
         config.set("Heading IDs and nav", "navigationvar", "False")
@@ -235,6 +240,8 @@ def resetOptions():
         bodyCheckVar.set(True)
         cssCheckVar.set("False")
         cssCheck.configure(state="disabled")
+        javascriptCheckVar.set("False")
+        javascriptCheck.configure(state="disabled")
         pageTitleEntryText.set("")
         pageTitleEntry.configure(state="disabled")
 
@@ -280,6 +287,7 @@ config.read(iniLocation)
 # read .ini values
 conf_bodycheckvar = config.getboolean('Body and head', 'bodyCheckVar')
 conf_csscheckvar = config.getboolean('Body and head', 'csscheckvar')
+conf_javascriptcheckvar = config.getboolean('Body and head', 'javascriptcheckvar')
 conf_pagetitleentrytext = config.get('Body and head', 'pagetitleentrytext')
 conf_headingsidvar = config.getboolean('Heading IDs and nav', 'headingsidvar')
 conf_navigationvar = config.getboolean('Heading IDs and nav', 'navigationvar')
@@ -349,7 +357,7 @@ frameBody.grid(sticky="W", row=row, column=0, pady=(20, 10), padx=(20,0))
 
 # "Only export the body?"
 bodyCheckVar = tk.BooleanVar(value=conf_bodycheckvar)
-exportBodyCheck = tk.Checkbutton(frameBody, text='Only export the body?',variable=bodyCheckVar, onvalue=True, offvalue=False, command=ablePageTitleAndCss)
+exportBodyCheck = tk.Checkbutton(frameBody, text='Only export the body?',variable=bodyCheckVar, onvalue=True, offvalue=False, command=ablePageTitleAndCssAndJavascript)
 exportBodyCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 # "Add suggested css?"
@@ -362,6 +370,17 @@ if conf_bodycheckvar:
 else:
     cssCheck.configure(state="normal")
 cssCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+# "Add javascript to highlight navigation while scrolling?"
+row += 1
+
+javascriptCheckVar = tk.BooleanVar(value=conf_javascriptcheckvar)
+javascriptCheck = tk.Checkbutton(frameBody, text='Add javascript to highlight navigation while scrolling?',variable=javascriptCheckVar, onvalue=True, offvalue=False, justify="left")
+if conf_bodycheckvar:
+    javascriptCheck.configure(state="disable")
+else:
+    javascriptCheck.configure(state="normal")
+javascriptCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 # "Page title"
 row += 1
@@ -689,6 +708,9 @@ pagenumbercss = '\t\t\t.pagenumber {font-size: 14px; color: #454545; text-align:
 # buttons
 buttoncss = '\t\t\tbutton {font-size: 14px; text-align: left; width: 100%;}\n\t\t\tbutton a {display: block;}'
 
+# highlighted nav
+highlightnavcss = '\t\t\tnav p a.active {background-color: #D7D7D7;}\n\t\t\tnav button a.active {background-color: #D7D7D7;}'
+
 # headings
 headingcss = '\t\t\th1, h2, h3 {font-size: 28px; color: #454545; text-align: left; padding-top: 18px; padding-bottom: 6px;}'
 
@@ -714,11 +736,51 @@ mediacaptioncss = '\t\t\t.mediacaption {display: block; font-size: 15px; color: 
 bibliographycss = '\t\t\t.bibliography {display: block; font-size: 18px; color: #454545; text-align: left; text-indent: -5%; margin-left: 5%;}'
 
 # assembly of css
-css = '<style>' + '\n' + bodycss + '\n' + tooltipcss + '\n' + gridcss + '\n' + paragraphcss + '\n' + pagenumbercss + '\n\n' + buttoncss + '\n\n' + headingcss + '\n\n' + linkscss + '\n\n' + listscss + '\n\n' + tablecss + '\n\n' + hrcss + '\n\n' + blockquotecss + '\n\n' + mediacaptioncss + '\n\n' + bibliographycss + '\n' '\t\t</style>' + '\n\n'
+css = '<style>' + '\n' + bodycss + '\n' + tooltipcss + '\n' + gridcss + '\n' + paragraphcss + '\n' + pagenumbercss + '\n\n' + buttoncss + '\n\n' + highlightnavcss + '\n\n' + headingcss + '\n\n' + linkscss + '\n\n' + listscss + '\n\n' + tablecss + '\n\n' + hrcss + '\n\n' + blockquotecss + '\n\n' + mediacaptioncss + '\n\n' + bibliographycss + '\n' '\t\t</style>' + '\n\n'
 
 # convert style code to XML element
 cssXML = etree.fromstring(css)
 
+
+### JAVASCRIPT ###
+javascript = """<script>
+function start() {
+    let h1Marker = document.querySelectorAll('h1[id*="heading"]');
+    let navPA = document.querySelectorAll('nav p a');
+    let navButA = document.querySelectorAll('nav button a');
+
+    window.addEventListener('scroll', () => {
+        let current = '';
+
+        h1Marker.forEach((section) => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+
+            if (pageYOffset >= sectionTop - sectionHeight / 3) {
+                current = section.getAttribute('id');
+            }
+        });
+        navPA.forEach((a) => {
+            a.classList.remove("active");
+            if (a.getAttribute("href") == '#' + current) {
+                a.classList.add("active");
+            }
+        });
+        navButA.forEach((a) => {
+            a.classList.remove("active");
+            if (a.getAttribute("href") == '#' + current) {
+                a.classList.add("active");
+            }
+        });
+    });
+};
+
+window.addEventListener('load', () => {
+    start();
+});
+</script>
+"""
+javascriptXML = etree.fromstring(javascript)
 
 ### CONVERT ###
 def convertAndExport():
@@ -787,8 +849,11 @@ def convertAndExport():
     # number paragraphs
     bodyxml = SciConvert.paragraph_numbering(paragraphNumberCheckVar.get(), bodyxml)
 
+    # create sections - haven't been able to figure it out yet
+    #bodyxml = SciConvert.create_sections(bodyxml)
+
     # assemble file
-    exportableBodyxml = SciConvert.assemble_html(navigationVar.get(), bodyCheckVar.get(), cssCheckVar.get(), cssXML, navGridDiv, bodyxml)
+    exportableBodyxml = SciConvert.assemble_html(navigationVar.get(), bodyCheckVar.get(), cssCheckVar.get(), cssXML, navGridDiv, bodyxml, javascriptXML, javascriptCheckVar.get())
 
     # unescape and re-escape HTML entities
     exportableBodyxml = SciConvert.escape_unescape(exportableBodyxml)
