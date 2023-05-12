@@ -173,6 +173,7 @@ def saveOptions():
     config.set('Format templates', 'detecttablecaptionsentry', detectTableCaptionsEntry.get())
     config.set('Format templates', 'detectBibliographyentry', detectBibliographyEntry.get())
     config.set('Format templates', 'detectignorepnumentry', detectIgnorePNumEntry.get())
+    config.set('Format templates', 'detecodeentry', detectCodeEntry.get())
     config.set('Tooltips', 'tooltipscheckvar', str(tooltipsCheckVar.get()))
     config.set('Tooltips', 'abbreviatetooltipsentry', abbreviateTooltipsEntry.get())
     config.set('Citability', 'paragraphnumbercheckvar', str(paragraphNumberCheckVar.get()))
@@ -212,6 +213,7 @@ def resetOptions():
         config.set('Format templates', 'detecttablecaptionsentry', "FVMW TableCaption")
         config.set('Format templates', 'detectbibliographyentry', "FVMW Bibliography")
         config.set('Format templates', 'detectignorepnumentry', "FVMW IgnorePNum")
+        config.set('Format templates', 'detectcodeentry', "FVMW Code")
         config.set('Tooltips', 'tooltipscheckvar', "True")
         config.set('Tooltips', 'abbreviatetooltipsentry', "500")
         config.set('Citability', 'paragraphnumbercheckvar', "False")
@@ -243,6 +245,7 @@ def resetOptions():
         detectBibliographyEntryText.set("FVMW Bibliography")
         detectIgnorePNumEntryText.set("FVMW IgnorePNum")
         detectIgnorePNumEntry.configure(state="normal")
+        detectCodeEntryText.set("FVMW Code")
 
         tooltipsCheckVar.set(True)
         abbreviateTooltipsEntryText.set("500")
@@ -277,6 +280,7 @@ conf_detectblockquotesentry = config.get('Format templates', 'detectblockquotese
 conf_detecttablecaptionsentry = config.get('Format templates', 'detecttablecaptionsentry')
 conf_detectbibliographyentry = config.get('Format templates', 'detecbibliographyentry')
 conf_detectignorepnumentry = config.get('Format templates', 'detectignorepnumentry')
+conf_detectcodeentry = config.get('Format templates', 'detectcodeentry')
 conf_tooltipscheckvar = config.getboolean('Tooltips', 'tooltipscheckvar')
 conf_abbreviatetooltipsentry = config.get('Tooltips', 'abbreviatetooltipsentry')
 conf_paragraphnumbercheckvar = config.getboolean('Citability', 'paragraphnumbercheckvar')
@@ -458,6 +462,16 @@ if conf_paragraphnumbercheckvar:
 else:
     detectIgnorePNumEntry.configure(state="disable")
 detectIgnorePNumEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+# "Detect code..."
+row += 1
+
+detectCodeLabel =tk.Label(frameDetection, text='Detect code paragraphs by which format template name?\nLeave empty to skip detection.', justify="left")
+detectCodeLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+detectCodeEntryText = tk.StringVar(value=conf_detectcodeentry)
+detectCodeEntry = tk.Entry(frameDetection, textvariable=detectCodeEntryText)
+detectCodeEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
 
 # --Tooltips settings--
 # frame
@@ -662,7 +676,7 @@ def convertAndExport():
     '''Converts a DOCX file to an HTML file and exports it by calling functions from SciDocx2WebConversion.py. Displays a "Success" message if conversion was successful.'''
 
     # style map
-    custom_style_map = SciConvert.style_map_func("", detectHeadingsEntry.get(), detectMediaEntry.get(), detectBlockquotesEntry.get(), detectTableCaptionsEntry.get(), detectBibliographyEntry.get(), detectIgnorePNumEntry.get(), paragraphNumberCheckVar.get())
+    custom_style_map = SciConvert.style_map_func("", detectHeadingsEntry.get(), detectMediaEntry.get(), detectBlockquotesEntry.get(), detectTableCaptionsEntry.get(), detectBibliographyEntry.get(), detectIgnorePNumEntry.get(), paragraphNumberCheckVar.get(), detectCodeEntry.get())
 
     # import and enclose input file with tags
     input = mammoth.convert_to_html(inputPath, style_map=custom_style_map).value
@@ -724,8 +738,14 @@ def convertAndExport():
     # number paragraphs
     bodyxml = SciConvert.paragraph_numbering(paragraphNumberCheckVar.get(), bodyxml)
 
-    # export file
-    SciConvert.write_html(navigationVar.get(), bodyCheckVar.get(), cssCheckVar.get(), cssXML, navGridDiv, bodyxml, outputPath)
+    # assemble file
+    exportableBodyxml = SciConvert.assemble_html(navigationVar.get(), bodyCheckVar.get(), cssCheckVar.get(), cssXML, navGridDiv, bodyxml)
+
+    # unescape and re-escape HTML entities
+    exportableBodyxml = SciConvert.escape_unescape(exportableBodyxml)
+
+    # write file
+    SciConvert.write_html(exportableBodyxml, outputPath)
 
     messagebox.showinfo("Success", "The file has been converted successfully.")
 

@@ -3,7 +3,7 @@ Convert academic papers in DOCX format to HTML. Tested on files generated with W
 
 This is the conversion module that is called by SciDocx2WebUI.
 
-Created on March 30th, 2023\n
+Last updated 2023.05.12\n
 Author: Tim Reichert\n
 Version: 1.0
 
@@ -17,6 +17,7 @@ Makes use of dwasyl's added page break detection functionailty: https://github.c
 import re # RegEx
 from lxml import etree # XML
 from html import unescape # Replace HTML entities with their actual symbols
+from html import escape # Re-add escape characters in example HTML code inside <code> tags
 
 # GUI
 from tkinter import messagebox
@@ -27,12 +28,11 @@ from tkinter import messagebox
 #- Automatically create sections based on the headings.
 #- Highlight section you're currently scrolling through in navbar.
 #- Implement "aria" attributes for higher accessibility.
-#- Escape characters that have a specific format template to make sure HTML-Code in the Word file displays as it should.
 #- Make sections for pages.
 
 ### MAIN CODE ###
 ## STYLE MAP
-def style_map_func(custom_style_map, headings, media, blockquotes, tableCaptions, bibliography, ignorePNum, paragraphNumberCheck):
+def style_map_func(custom_style_map, headings, media, blockquotes, tableCaptions, bibliography, ignorePNum, paragraphNumberCheck, code):
     '''Generates a style map based on the text in the input fields within the format template options section. Empty input fields are ignored. The style map detects templates applied to text and encloses them with an html element. For more information see: https://github.com/mwilliamson/python-mammoth#custom-style-map
     
     Headings -> h1:fresh
@@ -40,7 +40,8 @@ def style_map_func(custom_style_map, headings, media, blockquotes, tableCaptions
     Blockquotes -> blockquote:fresh
     Table Captions -> caption:fresh
     Bibliography -> p.bibliography:fresh
-    Ignore Paragraph Numbering -> p.ignorePNum:fresh'''
+    Ignore Paragraph Numbering -> p.ignorePNum:fresh
+    Code -> code'''
 
     if headings != "":
         custom_style_map += f"p[style-name='{headings}'] => h1:fresh"
@@ -54,6 +55,8 @@ def style_map_func(custom_style_map, headings, media, blockquotes, tableCaptions
         custom_style_map += f"\np[style-name='{bibliography}'] => p.bibliography:fresh"
     if (ignorePNum != "") and (paragraphNumberCheck):
         custom_style_map += f"\np[style-name='{ignorePNum}'] => p.ignorePNum:fresh"
+    if code != "":
+        custom_style_map += f"\np[style-name='{code}'] => code:fresh"
 
     return custom_style_map
 
@@ -148,7 +151,7 @@ def add_wbr_footnotes(footnotesAbbr, abbreviateFootnotesNumber):
             if re.compile(r'(<a.*?>)').search(footnotesAbbr[i]): # check if a link exists in the footnote before proceeding. Otherwise it will add wbr tags to the whole footnote instead of just the part within a tags.
                 replace = re.sub(r'(.*?)(<a.*?>)(.*?)(</a>)(.*)', r'\3', footnotesAbbr[i])
                 replace = re.sub(r'/', r'/<wbr>', replace)
-                footnotesAbbr[i] = re.sub(r'(<a.*?>)(.*?)(</a>)', r'\1' + f'{replace}' + r'\3', footnotesAbbr[i])
+                footnotesAbbr[i] = re.sub(r'(<a.*?>)(.*?)(</a>)', r'\1' + replace + r'\3', footnotesAbbr[i])
 
     return footnotesAbbr
 
@@ -177,6 +180,7 @@ def insert_footnotes(tooltipsCheckVar, bodyxml, footnotesAbbr):
             node.append(tooltipSpan)
             i += 1
 
+    #print(etree.tostring(bodyxml))
     return bodyxml
 
 def adjust_footnotes(tooltipsCheckVar, bodyxml):
@@ -356,7 +360,11 @@ def page_breaks(pageNumberCheckVar, pageNumberStartCheckVar, bodyxml):
                 i += 1
         else:
             messagebox.showerror('Page number insertion unsuccessful', 'The file conversion will continue but the page number abbreviation was unsuccessful. The starting page number input field only accepts integers.')
-            pageNumber.text = ''
+            for pageNumber in bodyxml.xpath('.//sub[@class="pagenumber"]'):
+                pageNumber.text = ''
+    else:
+        for pageNumber in bodyxml.xpath('.//sub[@class="pagenumber"]'):
+                pageNumber.text = ''
 
     return bodyxml
 
@@ -376,7 +384,7 @@ def paragraph_numbering(paragraphNumberCheckVar, bodyxml):
 
     return bodyxml
 
-def write_html(navigationVar, bodyCheckVar, cssCheckVar, cssXML, navGridDiv, bodyxml, outputPath):
+def assemble_html(navigationVar, bodyCheckVar, cssCheckVar, cssXML, navGridDiv, bodyxml):
     '''Assembles the individual sections (navigation, css, body) and writes them to an html file.
     
     If "Create navigation?" is unchecked:
@@ -405,9 +413,26 @@ def write_html(navigationVar, bodyCheckVar, cssCheckVar, cssXML, navGridDiv, bod
     else:
         exportableBodyxml = "<!DOCTYPE html>\n" + etree.tostring(bodyxml, encoding='unicode', pretty_print=True)
 
-    # write to file
+    return exportableBodyxml
+
+def escape_unescape(exportableBodyxml):
+    '''Unescapes the file to make sure HTML tags are applied properly instead of them being displayed as escaped HTML. Re-escapes HTML symbols that are marked as example code.'''
+
+    exportableBodyxml = unescape(exportableBodyxml)
+
+    def insertPreCode(match):
+        return r'<code>' + escape(match.group(2)) + r'</code>'
+    
+    exportableBodyxml = re.sub(r'(<code>)(.*?)(</code>)', insertPreCode, exportableBodyxml)
+
+    return exportableBodyxml
+
+def write_html(exportableBodyxml, outputPath):
+    '''Write HTML to file.'''
+    
     with open(outputPath, 'w', encoding='utf-8') as f:
-        f.write(unescape(exportableBodyxml))
+        f.write(exportableBodyxml)
+        #f.write(unescape(exportableBodyxml))
         f.close()
 
     return
