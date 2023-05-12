@@ -745,7 +745,7 @@ cssXML = etree.fromstring(css)
 ### JAVASCRIPT ###
 javascript = """<script>
 function start() {
-    let h1Marker = document.querySelectorAll('h1[id*="heading"]');
+    let h1Marker = document.querySelectorAll('h1[id*="heading"], h2[id*="heading"], h3[id*="heading"]');
     let navPA = document.querySelectorAll('nav p a');
     let navButA = document.querySelectorAll('nav button a');
 
@@ -824,7 +824,9 @@ def convertAndExport():
     bodyxml = SciConvert.remove_toc_and_head(bodyxml)
 
     # create navigation
-    findH1 = bodyxml.findall('.//h1')
+    #findH1 = bodyxml.findall('.//h1|.//h2|.//h3')
+    findH1 = bodyxml.xpath('.//*[self::h1 or self::h2 or self::h3]')
+    print(findH1)
     navigationElement = etree.Element('nav')
     commentNavigation = etree.Comment(' Navigation ')
     h1Navigation = etree.Element('h1')

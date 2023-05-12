@@ -259,7 +259,7 @@ def add_Head_IDs(headingsIDVar, bodyxml):
 
     if headingsIDVar:
         i = 1
-        for node in bodyxml.xpath('//h1'):
+        for node in bodyxml.xpath('//h1|//h2|//h3'):
             node.attrib['id'] = 'heading' + str(i)
             i += 1
 
@@ -310,6 +310,8 @@ def create_navigation(navigationVar, navigationTypeVar, findH1, navigationElemen
                 a.attrib['href'] = '#heading' + str(i)
                 headingsText = etree.tostring(node).decode('utf-8')
                 headingsText = re.sub(r'(<h1 .*?>)(.*?)(</h1>)', r'\2', headingsText)
+                headingsText = re.sub(r'(<h2 .*?>)(.*?)(</h2>)', r'\2', headingsText)
+                headingsText = re.sub(r'(<h3 .*?>)(.*?)(</h3>)', r'\2', headingsText)
                 headingsText = re.sub(r'(<sub class="pagenumber">NEW_PAGE_BEGINNING!</sub>)', r'', headingsText)
                 a.text = headingsText
                 navigationElement.append(elementPorB)
