@@ -586,7 +586,7 @@ pageNumberCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,20))
 
 row += 1
 
-pageNumberStartCheckLabel = tk.Label(framePar, text='Which docx page should be counted as the first page?', justify="left")
+pageNumberStartCheckLabel = tk.Label(framePar, text='Which docx page should be counted as the first page?\nInput an integer.', justify="left")
 pageNumberStartCheckLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 pageNumberStartCheckEntryText = tk.StringVar(value=conf_pagenumberstartcheckvar)

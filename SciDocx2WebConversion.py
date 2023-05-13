@@ -23,11 +23,10 @@ from html import escape # Re-add escape characters in example HTML code inside <
 from tkinter import messagebox
 
 ### POSSIBLE FUTURE TODO'S ###
-#- Add IDs to h2 and h3 headings
 #- Automatically create sections based on the headings.
-#- Highlight section you're currently scrolling through in navbar.
 #- Make sections for pages.
 #- Implement "aria" attributes for higher accessibility.
+#- Create new documentation
 
 ### MAIN CODE ###
 ## STYLE MAP
@@ -368,7 +367,7 @@ def page_breaks(pageNumberCheckVar, pageNumberStartCheckVar, bodyxml):
                 pageNumber.text = '{' + str(i) + '}'
                 i += 1
         else:
-            messagebox.showerror('Page number insertion unsuccessful', 'The file conversion will continue but the page number abbreviation was unsuccessful. The starting page number input field only accepts integers.')
+            messagebox.showerror('Page number insertion unsuccessful', 'The file conversion will continue but the page number insertion was unsuccessful. The starting page number input field only accepts integers.')
             for pageNumber in bodyxml.xpath('.//sub[@class="pagenumber"]'):
                 pageNumber.text = ''
     else:
