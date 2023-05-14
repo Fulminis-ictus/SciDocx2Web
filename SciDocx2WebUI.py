@@ -436,110 +436,6 @@ else:
     navigationBut.configure(state="disabled")
 navigationBut.grid(sticky="W", row=row, column=2, pady=(0, 10), padx=(20,20))
 
-# --Format template detection--
-# frame
-frameDetection = tk.LabelFrame(scrollSecondFrame, text='Format template detection')
-frameDetection.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-# "Detect headings..."
-row += 1
-
-detectHeadingsLabel = tk.Label(frameDetection, text='Detect headings by which format template name?\n1. order (h1), 2. order (h2) and 3. order (h3).\nLeave empty to skip detection.', justify="left")
-detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectHeadingsEntry1Text = tk.StringVar(value=conf_detectheadingsentry1)
-detectHeadingsEntry1 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry1Text)
-detectHeadingsEntry1.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-row += 1
-
-detectHeadingsEntry2Text = tk.StringVar(value=conf_detectheadingsentry2)
-detectHeadingsEntry2 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry2Text)
-detectHeadingsEntry2.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-row += 1
-
-detectHeadingsEntry3Text = tk.StringVar(value=conf_detectheadingsentry3)
-detectHeadingsEntry3 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry3Text)
-detectHeadingsEntry3.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect media placeholders..."
-row += 1
-
-detectMediaLabel = tk.Label(frameDetection, text='Detect media captions by which format template name?\nLeave empty to skip detection.', justify="left")
-detectMediaLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectMediaEntryText = tk.StringVar(value=conf_detectmediaentry)
-detectMediaEntry = tk.Entry(frameDetection, textvariable=detectMediaEntryText)
-detectMediaEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect blockquotes..."
-row += 1
-
-detectBlockquotesLabel = tk.Label(frameDetection, text='Detect blockquotes by which format template name?\nLeave empty to skip detection.', justify="left")
-detectBlockquotesLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectBlockquotesEntryText = tk.StringVar(value=conf_detectblockquotesentry)
-detectBlockquotesEntry = tk.Entry(frameDetection, textvariable=detectBlockquotesEntryText)
-detectBlockquotesEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect table captions..."
-row += 1
-
-detectTableCaptionsLabel = tk.Label(frameDetection, text='Detect table captions by which format template name?\nLeave empty to skip detection.', justify="left")
-detectTableCaptionsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectTableCaptionsEntryText = tk.StringVar(value=conf_detecttablecaptionsentry)
-detectTableCaptionsEntry = tk.Entry(frameDetection, textvariable=detectTableCaptionsEntryText)
-detectTableCaptionsEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect bibliography..."
-row += 1
-
-detectBibliographyLabel = tk.Label(frameDetection, text='Detect bibliography by which format template name?\nLeave empty to skip detection.', justify="left")
-detectBibliographyLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectBibliographyEntryText = tk.StringVar(value=conf_detectbibliographyentry)
-detectBibliographyEntry = tk.Entry(frameDetection, textvariable=detectBibliographyEntryText)
-detectBibliographyEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect paragraphs that should not be numbered..."
-row += 1
-
-detectIgnorePNumLabel =tk.Label(frameDetection, text='Detect paragraphs that should not be numbered by which\nformat template name?\nLeave empty to skip detection.', justify="left")
-detectIgnorePNumLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectIgnorePNumEntryText = tk.StringVar(value=conf_detectignorepnumentry)
-detectIgnorePNumEntry = tk.Entry(frameDetection, textvariable=detectIgnorePNumEntryText)
-if conf_paragraphnumbercheckvar:
-    detectIgnorePNumEntry.configure(state="normal")
-else:
-    detectIgnorePNumEntry.configure(state="disable")
-detectIgnorePNumEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect code..."
-row += 1
-
-detectCodeLabel =tk.Label(frameDetection, text='Detect code paragraphs by which format template name?\nLeave empty to skip detection.', justify="left")
-detectCodeLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectCodeEntryText = tk.StringVar(value=conf_detectcodeentry)
-detectCodeEntry = tk.Entry(frameDetection, textvariable=detectCodeEntryText)
-detectCodeEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Custom style map"
-row += 1
-
-customStyleMapLabel =tk.Label(frameDetection, text='Additional custom style map entries.', justify="left")
-customStyleMapLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-row += 1
-
-customStyleMapEntryText = tk.StringVar(value=conf_customstylemap)
-customStyleMapEntry = scrolledtext.ScrolledText(frameDetection, width=60, height=20)
-customStyleMapEntry.insert('1.0', customStyleMapEntryText.get())
-customStyleMapEntry.grid(sticky="W", row=row, column=0, columnspan=2, pady=(10, 10), padx=(20,20))
-
 # --Tooltips settings--
 # frame
 frameTooltips = tk.LabelFrame(scrollSecondFrame, text='Tooltips settings')
@@ -598,6 +494,111 @@ else:
 pageNumberStartCheckEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(25,20))
 
 
+# --Format template detection--
+# frame
+frameDetection = tk.LabelFrame(scrollSecondFrame, text='Format template detection')
+frameDetection.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+# "Detect headings..."
+row += 1
+
+detectHeadingsLabel = tk.Label(frameDetection, text='Detect headings by which format template name?\n1. order (h1), 2. order (h2) and 3. order (h3).\nLeave empty to skip detection.', justify="left")
+detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+detectHeadingsEntry1Text = tk.StringVar(value=conf_detectheadingsentry1)
+detectHeadingsEntry1 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry1Text)
+detectHeadingsEntry1.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+row += 1
+
+detectHeadingsEntry2Text = tk.StringVar(value=conf_detectheadingsentry2)
+detectHeadingsEntry2 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry2Text)
+detectHeadingsEntry2.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+row += 1
+
+detectHeadingsEntry3Text = tk.StringVar(value=conf_detectheadingsentry3)
+detectHeadingsEntry3 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry3Text)
+detectHeadingsEntry3.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+# "Detect media placeholders..."
+row += 1
+
+detectMediaLabel = tk.Label(frameDetection, text='Detect media captions by which format template name?\nLeave empty to skip detection.', justify="left")
+detectMediaLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+detectMediaEntryText = tk.StringVar(value=conf_detectmediaentry)
+detectMediaEntry = tk.Entry(frameDetection, textvariable=detectMediaEntryText)
+detectMediaEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+# "Detect table captions..."
+row += 1
+
+detectTableCaptionsLabel = tk.Label(frameDetection, text='Detect table captions by which format template name?\nLeave empty to skip detection.', justify="left")
+detectTableCaptionsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+detectTableCaptionsEntryText = tk.StringVar(value=conf_detecttablecaptionsentry)
+detectTableCaptionsEntry = tk.Entry(frameDetection, textvariable=detectTableCaptionsEntryText)
+detectTableCaptionsEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+# "Detect blockquotes..."
+row += 1
+
+detectBlockquotesLabel = tk.Label(frameDetection, text='Detect blockquotes by which format template name?\nLeave empty to skip detection.', justify="left")
+detectBlockquotesLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+detectBlockquotesEntryText = tk.StringVar(value=conf_detectblockquotesentry)
+detectBlockquotesEntry = tk.Entry(frameDetection, textvariable=detectBlockquotesEntryText)
+detectBlockquotesEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+# "Detect bibliography..."
+row += 1
+
+detectBibliographyLabel = tk.Label(frameDetection, text='Detect bibliography by which format template name?\nLeave empty to skip detection.', justify="left")
+detectBibliographyLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+detectBibliographyEntryText = tk.StringVar(value=conf_detectbibliographyentry)
+detectBibliographyEntry = tk.Entry(frameDetection, textvariable=detectBibliographyEntryText)
+detectBibliographyEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+# "Detect paragraphs that should not be numbered..."
+row += 1
+
+detectIgnorePNumLabel =tk.Label(frameDetection, text='Detect paragraphs that should not be numbered by which\nformat template name?\nLeave empty to skip detection.', justify="left")
+detectIgnorePNumLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+detectIgnorePNumEntryText = tk.StringVar(value=conf_detectignorepnumentry)
+detectIgnorePNumEntry = tk.Entry(frameDetection, textvariable=detectIgnorePNumEntryText)
+if conf_paragraphnumbercheckvar:
+    detectIgnorePNumEntry.configure(state="normal")
+else:
+    detectIgnorePNumEntry.configure(state="disable")
+detectIgnorePNumEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+# "Detect code..."
+row += 1
+
+detectCodeLabel =tk.Label(frameDetection, text='Detect code paragraphs by which format template name?\nLeave empty to skip detection.', justify="left")
+detectCodeLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+detectCodeEntryText = tk.StringVar(value=conf_detectcodeentry)
+detectCodeEntry = tk.Entry(frameDetection, textvariable=detectCodeEntryText)
+detectCodeEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+# "Custom style map"
+row += 1
+
+customStyleMapLabel =tk.Label(frameDetection, text='Additional custom style map entries.', justify="left")
+customStyleMapLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+row += 1
+
+customStyleMapEntryText = tk.StringVar(value=conf_customstylemap)
+customStyleMapEntry = scrolledtext.ScrolledText(frameDetection, width=60, height=20)
+customStyleMapEntry.insert('1.0', customStyleMapEntryText.get())
+customStyleMapEntry.grid(sticky="W", row=row, column=0, columnspan=2, pady=(10, 10), padx=(20,20))
+
+
 # SEPARATOR
 separator = ttk.Separator(window, orient='horizontal')
 separator.grid(sticky="EW", row=row, columnspan=2)
@@ -636,12 +637,12 @@ bodycss = '\t\t\tbody {margin-left: 15%; margin-right: 15%;}'
 
 # tooltips
 tooltipcss = '''\n\t\t\t/* Tooltip container */
-    .tooltip {
+    .tooltippop {
     position: relative;
     }
 
     /* Tooltip text */
-    .tooltip .tooltiptext {
+    .tooltippop [role="tooltip"] {
     font-size: 12pt;
     visibility: hidden;
     width: max-content;
@@ -666,7 +667,7 @@ tooltipcss = '''\n\t\t\t/* Tooltip container */
     }
 
     /* Show the tooltip text when you mouse over the tooltip container */
-    .tooltip:hover .tooltiptext {
+    .tooltippop:hover [role="tooltip"] {
     visibility: visible;
     opacity: 1;
     }'''
@@ -812,7 +813,7 @@ def convertAndExport():
     commentBottomFootnotes = etree.Comment(' Bottom footnotes ')
     breakElement = etree.XML('<br/>')
     hrElement = etree.XML('<hr/>')
-    bodyxml = SciConvert.footnotes_bottom_separate(bodyxml, commentBottomFootnotes, breakElement, hrElement)
+    bodyxml = SciConvert.footnotes_bottom_adjust(bodyxml, commentBottomFootnotes, breakElement, hrElement)
 
     # add wbr to main text
     bodyxml = SciConvert.add_wbr_text(bodyxml)
@@ -826,7 +827,6 @@ def convertAndExport():
     # create navigation
     #findH1 = bodyxml.findall('.//h1|.//h2|.//h3')
     findH1 = bodyxml.xpath('.//*[self::h1 or self::h2 or self::h3]')
-    print(findH1)
     navigationElement = etree.Element('nav')
     commentNavigation = etree.Comment(' Navigation ')
     h1Navigation = etree.Element('h1')

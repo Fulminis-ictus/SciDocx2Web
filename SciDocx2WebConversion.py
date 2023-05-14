@@ -23,10 +23,8 @@ from html import escape # Re-add escape characters in example HTML code inside <
 from tkinter import messagebox
 
 ### POSSIBLE FUTURE TODO'S ###
-#- Automatically create sections based on the headings.
-#- Make sections for pages.
-#- Implement "aria" attributes for higher accessibility.
 #- Create new documentation
+#- Style map for YouTube video, audio and img embeds.
 
 ### MAIN CODE ###
 ## STYLE MAP
@@ -165,17 +163,21 @@ def insert_footnotes(tooltipsCheckVar, bodyxml, footnotesAbbr):
     '''If "Add tooltips to footnotes?" is checked:
     Finds <sup> tags that contain links with an ID starting with "footnote-ref", which denotes footnote numbers in the main text. It then creates a tooltip text <span> and appends it to the end of the found <sup> tags. The whole element, including the <sup> element and tooltip text <span> element, is then enclosed with a tooltip <span> element. Structure derived from: https://www.w3schools.com/howto/howto_css_tooltip.asp
     
+    Also adds "role" and "aria-attribute" attributes for accessibility.
+    
     Example: <sup><a href="#footnote-N" id="footnote-ref-N">[N]</a></sup> -> 
-    <span class="tooltip"><sup><a href="#footnote-N" id="footnote-ref-N">[N]</a><span class="tooltiptext">Footnote content.</span></sup></span>'''
+    <span class="tooltippop" aria-describedby="tooltip-N><sup><a href="#footnote-N" id="footnote-ref-N">[N]</a><span role="tooltip" id="tooltip-N">Footnote content.</span></sup></span>'''
 
     if tooltipsCheckVar:
         i = 0
         for node in bodyxml.xpath('//sup/a[contains(@id, "footnote-ref")]/..'): 
             # create tooltip and tooltip text <span>s
             tooltiptextSpan = etree.Element('span')
-            tooltiptextSpan.attrib['class'] = 'tooltiptext'
+            tooltiptextSpan.attrib['role'] = 'tooltip'
+            tooltiptextSpan.attrib['id'] = 'tooltip-' + str(i + 1)
             tooltipSpan = etree.Element('span')
-            tooltipSpan.attrib['class'] = 'tooltip'
+            tooltipSpan.attrib['class'] = 'tooltippop'
+            tooltipSpan.attrib['aria-describedby'] = 'tooltip-' + str(i + 1)
 
             # insert footnote text and append tooltiptext <span> to end of current footnote sections 
             tooltiptextSpan.text = footnotesAbbr[i]
@@ -201,23 +203,24 @@ def adjust_footnotes(tooltipsCheckVar, bodyxml):
 
     if tooltipsCheckVar:
         # remove <sup> elements
-        while bodyxml.xpath('//sup/span[contains(@class, "tooltip")]/..'):
-            for node in bodyxml.xpath('//sup/span[contains(@class, "tooltip")]/..'):
+        while bodyxml.xpath('//sup/span[contains(@class, "tooltippop")]/..'):
+            for node in bodyxml.xpath('//sup/span[contains(@class, "tooltippop")]/..'):
                 for a in node:
                     node.addnext(a)
                 node.getparent().remove(node)
         
         # add <sup> elements containing the footnote numbers at the right position
-        for node in bodyxml.xpath('//a[contains(@id, "footnote-ref")]'):
-            # transform text from [N] to N, insert it into the <sup> elements, remove it from the <a> element
-            node.text = re.sub(r'(\[)(.*)(\])', r'\2', node.text)
+        for a in bodyxml.xpath('//a[contains(@id, "footnote-ref")]'):
+            # transform text inside <a> from [N] to N, give it an aria-label, insert it into the <sup> elements, remove it from the <a> element
+            a.text = re.sub(r'(\[)(.*)(\])', r'\2', a.text)
+            a.attrib['label'] = 'Link to footnote list at the bottom of the document.'
             sup = etree.Element('sup')
-            sup.text = node.text
-            node.text = ''
+            sup.text = a.text
+            a.text = ''
 
             # move <sup> elements to the right positions
-            sup.extend(node)
-            node.append(sup)
+            sup.extend(a)
+            a.append(sup)
     
     else:
         for node in bodyxml.xpath('//a[contains(@id, "footnote-ref")]'):
@@ -226,9 +229,12 @@ def adjust_footnotes(tooltipsCheckVar, bodyxml):
 
     return bodyxml
 
-def footnotes_bottom_separate(bodyxml, commentBottomFootnotes, breakElement, hrElement):
+def footnotes_bottom_adjust(bodyxml, commentBottomFootnotes, breakElement, hrElement):
     '''If a footnote list at the bottom of the main text exists:
-    Adds elements before the footnote list at the bottom to separate it from the rest: <br/>, <hr/> and the comment "Bottom footnotes".'''
+
+    Adds elements before the footnote list at the bottom to separate it from the rest: <br/>, <hr/> and the comment "Bottom footnotes".
+    
+    Also adds "aria-label" attributes that describe the links at the end of the footntoes as link backs to the footnotes in the main text.'''
 
     bottomFootnotes = bodyxml.find('.//li[@id="footnote-1"]/..')
 
@@ -237,6 +243,11 @@ def footnotes_bottom_separate(bodyxml, commentBottomFootnotes, breakElement, hrE
         bottomFootnotes.addprevious(breakElement)
         bottomFootnotes.addprevious(hrElement)
         bottomFootnotes.addprevious(breakElement)
+
+    for li in bottomFootnotes:
+        for p in li:
+            for a in p.xpath('//a[contains(@href, "footnote-ref")]'):
+                a.attrib['aria-label'] = 'Link back to footnote in main text.'
 
     return bodyxml
 

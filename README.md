@@ -27,6 +27,7 @@ SciDocx2Web allows you to convert your DOCX articles written in, for example, Wo
 - Detection of slashes and insertion of wbr tags in links and in footnotes to prevent them from going beyond page boundaries.
 - Insertion of cite attributes into block quotes that contain the footnote content of said block quote.
 - Insertion of table captions into the table elements.
+- Footnotes, footnote tooltips and links between footnotes and the footnote list at the bottom of the page receive aria and role attributes for increased accessibility.
 - Predefined CSS that can be used as a basis.
 
 This project was created as part of the publication plans of the [Forschungsgemeinschaft VideospielMusikWissenschaft](https://videospielmusikwissenschaft.de) (FVMW, Research Group for Video Game Music Studies). We decided that having footnote tooltips and some form of citability aid would benefit our publications. You can find similar features [here](https://www.mtosmt.org/issues/mto.19.25.3/mto.19.25.3.medina.gray.html) or [here](https://zfdg.de/wp_2021_001). Incorporating said features manually for every article would be very time-consuming, and as such this tool was created. I added additional features, as well as a GUI with options to make it usable for people outside our research group.
@@ -58,6 +59,11 @@ Either way, a GUI will open where you can choose different options that change t
 - **"Page title"** Insert the name of the page into the head. Leave this field blank to not insert a page title.
 - **"Automatically add IDs to headings"** Adds IDs to all headings that can then be referenced by the navigation. Note that you will need to have marked text as headings (see "Format template detection" below) for SciDocx2Web to be able to detect those headings and add IDs to them.
 - **"Create navigation?"** Creates a navigation that is inserted at the top of the article (displayed left of it and sticky, if CSS option has been checked). You can choose between displaying the navigation items as paragraphs or as buttons.
+- **"Add tooltips to footnotes?"** Encloses footnotes with additional tooltip code. Note that the tooltips will only be displayed properly if the right CSS is included in the HTML file! See below.
+- **"Abbreviate tooltips after how many symbols?"** If footnotes are too long, then the tooltips could potentially reach beyond the page, which could make part of them unreadable. To prevent this, one might want to abbreviate the footnote tooltips. The footnotes at the bottom of the page are unaffected by this! Note that abbreviating footnote tooltips also removes any markup from said footnote tooltips. This is necessary to prevent unclosed tags caused by some closing tags being removed by the abbreviation, which would have a negative effect on the rest of the HTML code.
+- **"Number the paragraphs?"** If this option is checked, then all paragraphs, except those that are medacaptions, bibliographies or which have the "ignorePNum" class (see format templates), are numbered. The numbers are enclosed with square brackets [N] and inserted at the beginning of the paragraphs.
+- **"Insert page numbers?"** This option inserts page numbers into the text where a new page begins. The numbers are enclosed in curly brackets {N}, are written as subscript, and receive a light gray background if the "Add suggested css?" option is checked.
+- **"Which docx page should be counted as the first page?"** If your DOCX file starts counting pages at a later page, because your first page features nothing but the abstract, for example, then you might want to set this number to that page. This feature exists to make it possible to crossreference the HTML version and the print/digital PDF version of the article. Note that the page numbers are inserted where said page starts, not where it ends, as opposed to formats where the page number is oftentimes in the footer.
 - **"Format template detection"**:
     - In Word or LibreOffice, for example, you can choose which format templates to apply to marked text. You can also create new format templates and name them however you want. You can create one called "HeadingLevel1", for example, and mark all text that you want displayed as h1 elements with this format template. In SciDocx2Web's GUI you'd then type in that format template name into the top "Detect headings by which format template name?" input field and the text that you marked in Word or LibreOffice will then be marked as a first level heading in the HTML code.
     - The "Media" and "Table Caption" entries are separate because table captions should, due to semantic reasons, be inside of table elements and not outside of them.
@@ -66,20 +72,15 @@ Either way, a GUI will open where you can choose different options that change t
     - Text marked with the "code" format template will receive HTML escape characters to make sure that they aren't interpreted as actual HTML code.
     - You can create additional style map rules in the bottom field. Consult [this guide](https://github.com/mwilliamson/python-mammoth#writing-style-maps) for writing style maps.
     - Any field that is left empty will be skipped.
-- **"Add tooltips to footnotes?"** Encloses footnotes with additional tooltip code. Note that the tooltips will only be displayed properly if the right CSS is included in the HTML file! See below.
-- **"Abbreviate tooltips after how many symbols?"** If footnotes are too long, then the tooltips could potentially reach beyond the page, which could make part of them unreadable. To prevent this, one might want to abbreviate the footnote tooltips. The footnotes at the bottom of the page are unaffected by this! Note that abbreviating footnote tooltips also removes any markup from said footnote tooltips. This is necessary to prevent unclosed tags caused by some closing tags being removed by the abbreviation, which would have a negative effect on the rest of the HTML code.
-- **"Number the paragraphs?"** If this option is checked, then all paragraphs, except those that are medacaptions, bibliographies or which have the "ignorePNum" class (see format templates), are numbered. The numbers are enclosed with square brackets [N] and inserted at the beginning of the paragraphs.
-- **"Insert page numbers?"** This option inserts page numbers into the text where a new page begins. The numbers are enclosed in curly brackets {N}, are written as subscript, and receive a light gray background if the "Add suggested css?" option is checked.
-- **"Which docx page should be counted as the first page?"** If your DOCX file starts counting pages at a later page, because your first page features nothing but the abstract, for example, then you might want to set this number to that page. This feature exists to make it possible to crossreference the HTML version and the print/digital PDF version of the article. Note that the page numbers are inserted where said page starts, not where it ends, as opposed to formats where the page number is oftentimes in the footer.
 - **"Save options" and "Reset options"** You can save your preferred options, so you don't have to re-choose them every time you open the program. The options are then saved to SciDocx2Web.ini. You can use the Reset options button if you'd like to reset them back to factory settings.
 
 ### CSS
 
 The CSS inserted into the document is more about function than visual appeal. If you'd like to add your own CSS or edit or remove the inserted CSS, then simply open the file in an editor of your choice. CSS that is important for some features to work correctly, are:
 - Footnote tooltips (based on [this code](https://www.w3schools.com/css/css_tooltip.asp).):
-    - .tooltip
-    - .tooliptext
-    - .tooltip:hover
+    - .tooltippop
+    - tooltippop:hover
+    - [role="tooltip"]
 - Grid (displaying the main text and the navigation side by side):
     - .gridContainer
     - .navGrid
