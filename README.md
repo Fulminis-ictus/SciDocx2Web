@@ -18,7 +18,10 @@ SciDocx2Web allows you to convert your DOCX articles written in, for example, Wo
     - Mark the start of each new page for easier cross referencability between the DOCX file and the HTML page.
     - Number each paragraph.
 - Predefined custom style map to mark the following elements in the HTML code:
-    - Headings (first, second and third order).
+    - Headings (first, second and third level).
+    - Image embeds.
+    - Video embeds.
+    - Audio embeds.
     - Media captions.
     - Table captions.
     - Block quotes.
@@ -66,6 +69,8 @@ Either way, a GUI will open where you can choose different options that change t
 - **"Which docx page should be counted as the first page?"** If your DOCX file starts counting pages at a later page, because your first page features nothing but the abstract, for example, then you might want to set this number to that page. This feature exists to make it possible to crossreference the HTML version and the print/digital PDF version of the article. Note that the page numbers are inserted where said page starts, not where it ends, as opposed to formats where the page number is oftentimes in the footer.
 - **"Format template detection"**:
     - In Word or LibreOffice, for example, you can choose which format templates to apply to marked text. You can also create new format templates and name them however you want. You can create one called "HeadingLevel1", for example, and mark all text that you want displayed as h1 elements with this format template. In SciDocx2Web's GUI you'd then type in that format template name into the top "Detect headings by which format template name?" input field and the text that you marked in Word or LibreOffice will then be marked as a first level heading in the HTML code.
+    - You can use the image, video and audio format templates to embed media in your HTML file. Make sure that whatever you've marked with said template is not a hyperlink but just plain text! You might have to make sure that the video link is an actual embed link. https://youtu.be/gpdYKamOjUo might not display properly while https://www.youtube.com/embed/gpdYKamOjUo will. You can also link local files by marking a path to said file instead of a link (for example "videos/video.mp4", without quotation marks).
+    - You can input your preferred dimensions for image and video embeds as "X,Y" (without quotation marks). If the input fields are empty or if the input values are faulty (for example if you've input three numbers seperated by commas or if you've input letters), then no "width" and "height" attributes will be inserted and the images and videos will retain their original dimensions.
     - The "Media" and "Table Caption" entries are separate because table captions should, due to semantic reasons, be inside of table elements and not outside of them.
     - If the option to insert the predefined CSS is checked, then bibliographies will be displayed with a hanging indent to improve readability.
     - The field "Detect paragraphs that should not be numbered..." is only active if the below "Number the paragraphs?" option is checked. Paragraphs marked with the respective format template will be ignored when numbering the paragraphs. This might be useful if you have an abstract at the top of the document, for example, that you don't want to number.
@@ -108,6 +113,7 @@ Currently know issues or missing features are:
 - **Why are there empty, numbered paragraphs in my output document?** Make sure there are no seemingly empty paragraphs in your DOCX document that contain a space. Empty paragraphs are usually ignored, but if a seemingly empty paragraph has a space in it (meaning it visuall looks empty, but you accidentally pressed the space bar while editing that paragraph) then it's counted as a paragraph.
 - **Why are no tooltips being displayed above footnotes when I hover over them?** Make sure the "Only export the body?" option is unchecked and the "Add suggested css?" option is checked. The tooltip CSS is necessary for the tooltips to work (see How to use - CSS).
 - **How can I fix the problem that footnote tooltips are exiting the page's boundaries?** Insert a number into the "Abbreviate tooltips after how many symbols?" input field in the options. Note that this also removes any markup inside the tooltips (meaning text won't be cursive anymore, links won't be hyperlinks etc.).
+- **"Why is my video embed not working?"** Make sure you're using the embed link and not the normal link. YouTube's embed link looks something like this: https://www.youtube.com/embed/VIDEOID, not https://www.youtube.com/VIDEOID.
 - **Why is the program being flagged as a virus?** It's unfortunately [common](https://medium.com/@markhank/how-to-stop-your-python-programs-being-seen-as-malware-bfd7eb407a7) for EXE files created from python files to be false positives. I'm attempting to get it whitelisted, but might not have contacted the company who owns your virus program yet.
 
 

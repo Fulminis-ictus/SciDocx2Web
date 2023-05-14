@@ -175,6 +175,11 @@ def saveOptions():
     config.set('Format templates', 'detectheadingsentry1', detectHeadingsEntry1.get())
     config.set('Format templates', 'detectheadingsentry2', detectHeadingsEntry2.get())
     config.set('Format templates', 'detectheadingsentry3', detectHeadingsEntry3.get())
+    config.set('Format templates', 'detectimagesentry', detectImagesEntry.get())
+    config.set('Format templates', 'imagesdimensionsentry', imagesDimensionsEntry.get())
+    config.set('Format templates', 'detectvideosentry', detectVideosEntry.get())
+    config.set('Format templates', 'videosdimensionsentry', videosDimensionsEntry.get())
+    config.set('Format templates', 'detectaudioentry', detectAudioEntry.get())
     config.set('Format templates', 'detectMediaentry', detectMediaEntry.get())
     config.set('Format templates', 'detectblockquotesentry', detectBlockquotesEntry.get())
     config.set('Format templates', 'detecttablecaptionsentry', detectTableCaptionsEntry.get())
@@ -219,6 +224,11 @@ def resetOptions():
         config.set('Format templates', 'detectheadingsentry1', "FVMW Heading")
         config.set('Format templates', 'detectheadingsentry2', "FVMW Heading2")
         config.set('Format templates', 'detectheadingsentry3', "FVMW Heading3")
+        config.set('Format templates', 'detectimagesentry', "FVMW Image")
+        config.set('Format templates', 'imagesdimensionsentry', "720,405")
+        config.set('Format templates', 'detectvideosentry', "FVMW Video")
+        config.set('Format templates', 'videosdimensionsentry', "720,405")
+        config.set('Format templates', 'detectaudioentry', "FVMW Audio")
         config.set('Format templates', 'detectMediaentry', "FVMW Media")
         config.set('Format templates', 'detectblockquotesentry', "FVMW Blockquote")
         config.set('Format templates', 'detecttablecaptionsentry', "FVMW TableCaption")
@@ -255,6 +265,11 @@ def resetOptions():
         detectHeadingsEntry1Text.set("FVMW Heading")
         detectHeadingsEntry2Text.set("FVMW Heading2")
         detectHeadingsEntry3Text.set("FVMW Heading3")
+        detectImagesEntryText.set("FVMW Image")
+        imagesDimensionsEntryText.set("720,405")
+        detectVideosEntryText.set("FVMW Video")
+        videosDimensionsEntryText.set("720,405")
+        detectAudioEntryText.set("FVMW Audio")
         detectMediaEntryText.set("FVMW Media")
         detectBlockquotesEntryText.set("FVMW Blockquote")
         detectTableCaptionsEntryText.set("FVMW TableCaption")
@@ -295,6 +310,11 @@ conf_navigationtypevar = config.get('Heading IDs and nav', 'navigationtypevar')
 conf_detectheadingsentry1 = config.get('Format templates', 'detectheadingsentry1')
 conf_detectheadingsentry2 = config.get('Format templates', 'detectheadingsentry2')
 conf_detectheadingsentry3 = config.get('Format templates', 'detectheadingsentry3')
+conf_detectimagesentry = config.get('Format templates', 'detectimagesentry')
+conf_imagesdimensionsentry = config.get('Format templates', 'imagesdimensionsentry')
+conf_detectvideosentry = config.get('Format templates', 'detectvideosentry')
+conf_videosdimensionsentry = config.get('Format templates', 'videosdimensionsentry')
+conf_detectaudioentry = config.get('Format templates', 'detectaudioentry')
 conf_detectmediaentry = config.get('Format templates', 'detectMediaentry')
 conf_detectblockquotesentry = config.get('Format templates', 'detectblockquotesentry')
 conf_detecttablecaptionsentry = config.get('Format templates', 'detecttablecaptionsentry')
@@ -502,7 +522,7 @@ frameDetection.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 # "Detect headings..."
 row += 1
 
-detectHeadingsLabel = tk.Label(frameDetection, text='Detect headings by which format template name?\n1. order (h1), 2. order (h2) and 3. order (h3).\nLeave empty to skip detection.', justify="left")
+detectHeadingsLabel = tk.Label(frameDetection, text='Detect headings by which format template name? 1. level (h1).\nLeave empty to skip detection.', justify="left")
 detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 detectHeadingsEntry1Text = tk.StringVar(value=conf_detectheadingsentry1)
@@ -511,17 +531,71 @@ detectHeadingsEntry1.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20
 
 row += 1
 
+detectHeadingsLabel = tk.Label(frameDetection, text='Detect headings by which format template name? 2. level (h2).\nLeave empty to skip detection.', justify="left")
+detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
 detectHeadingsEntry2Text = tk.StringVar(value=conf_detectheadingsentry2)
 detectHeadingsEntry2 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry2Text)
 detectHeadingsEntry2.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
 
 row += 1
 
+detectHeadingsLabel = tk.Label(frameDetection, text='Detect headings by which format template name? 3. level (h3).\nLeave empty to skip detection.', justify="left")
+detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
 detectHeadingsEntry3Text = tk.StringVar(value=conf_detectheadingsentry3)
 detectHeadingsEntry3 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry3Text)
 detectHeadingsEntry3.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
 
-# "Detect media placeholders..."
+# "Detect image references..."
+row += 1
+
+detectImagesLabel = tk.Label(frameDetection, text='Detect image references by which format template name?\nLeave empty to skip detection.', justify="left")
+detectImagesLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+detectImagesEntryText = tk.StringVar(value=conf_detectimagesentry)
+detectImagesEntry = tk.Entry(frameDetection, textvariable=detectImagesEntryText)
+detectImagesEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+row += 1
+
+imagesDimensionsLabel = tk.Label(frameDetection, text='Which dimensions should the video embed have?\nSeparate X and Y value with a comma (X,Y).\nLeave empty to use default (720,450).', justify="left")
+imagesDimensionsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+imagesDimensionsEntryText = tk.StringVar(value=conf_imagesdimensionsentry)
+imagesDimensionsEntry = tk.Entry(frameDetection, textvariable=imagesDimensionsEntryText)
+imagesDimensionsEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+# "Detect video references..."
+row += 1
+
+detectVideosLabel = tk.Label(frameDetection, text='Detect video references by which format template name?\nLeave empty to skip detection.', justify="left")
+detectVideosLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+detectVideosEntryText = tk.StringVar(value=conf_detectvideosentry)
+detectVideosEntry = tk.Entry(frameDetection, textvariable=detectVideosEntryText)
+detectVideosEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+row += 1
+
+videosDimensionsLabel = tk.Label(frameDetection, text='Which dimensions should the video embed have?\nSeparate X and Y value with a comma (X,Y).\nLeave empty to use default (720,450).', justify="left")
+videosDimensionsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+videosDimensionsEntryText = tk.StringVar(value=conf_videosdimensionsentry)
+videosDimensionsEntry = tk.Entry(frameDetection, textvariable=videosDimensionsEntryText)
+videosDimensionsEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+# "Detect audio references..."
+row += 1
+
+detectAudioLabel = tk.Label(frameDetection, text='Detect audio references by which format template name?\nLeave empty to skip detection.', justify="left")
+detectAudioLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+
+detectAudioEntryText = tk.StringVar(value=conf_detectaudioentry)
+detectAudioEntry = tk.Entry(frameDetection, textvariable=detectAudioEntryText)
+detectAudioEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+
+# "Detect media captions..."
 row += 1
 
 detectMediaLabel = tk.Label(frameDetection, text='Detect media captions by which format template name?\nLeave empty to skip detection.', justify="left")
@@ -788,7 +862,7 @@ def convertAndExport():
     '''Converts a DOCX file to an HTML file and exports it by calling functions from SciDocx2WebConversion.py. Displays a "Success" message if conversion was successful.'''
 
     # style map
-    custom_style_map = SciConvert.style_map_func("", detectHeadingsEntry1.get(), detectHeadingsEntry2.get(), detectHeadingsEntry3.get(), detectMediaEntry.get(), detectBlockquotesEntry.get(), detectTableCaptionsEntry.get(), detectBibliographyEntry.get(), detectIgnorePNumEntry.get(), paragraphNumberCheckVar.get(), detectCodeEntry.get(), customStyleMapEntry.get('1.0', 'end'))
+    custom_style_map = SciConvert.style_map_func("", detectHeadingsEntry1.get(), detectHeadingsEntry2.get(), detectHeadingsEntry3.get(), detectImagesEntry.get(), detectVideosEntry.get(), detectAudioEntry.get(), detectMediaEntry.get(), detectBlockquotesEntry.get(), detectTableCaptionsEntry.get(), detectBibliographyEntry.get(), detectIgnorePNumEntry.get(), paragraphNumberCheckVar.get(), detectCodeEntry.get(), customStyleMapEntry.get('1.0', 'end'))
 
     # import and enclose input file with tags
     input = mammoth.convert_to_html(inputPath, style_map=custom_style_map).value
@@ -838,6 +912,15 @@ def convertAndExport():
     # add cite to blockquotes
     tooltiptextPath = './/sup/a[contains(@id, "footnote-ref")]'
     bodyxml = SciConvert.add_cite(tooltiptextPath, bodyxml, footnotes)
+
+    # embed images
+    bodyxml = SciConvert.embed_images(bodyxml, imagesDimensionsEntry.get())
+
+    # embed videos
+    bodyxml = SciConvert.embed_videos(bodyxml, videosDimensionsEntry.get())
+
+    # embed audio
+    bodyxml = SciConvert.embed_audio(bodyxml)
 
     # file insertion messages
     bodyxml = SciConvert.file_insertion_message(bodyxml)

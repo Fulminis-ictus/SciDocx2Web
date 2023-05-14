@@ -23,12 +23,12 @@ from html import escape # Re-add escape characters in example HTML code inside <
 from tkinter import messagebox
 
 ### POSSIBLE FUTURE TODO'S ###
+#- Doublecheck code.
 #- Create new documentation
-#- Style map for YouTube video, audio and img embeds.
 
 ### MAIN CODE ###
 ## STYLE MAP
-def style_map_func(custom_style_map, headings1, headings2, headings3, media, blockquotes, tableCaptions, bibliography, ignorePNum, paragraphNumberCheck, code, addStyleMap):
+def style_map_func(custom_style_map, headings1, headings2, headings3, images, videos, audio, media, blockquotes, tableCaptions, bibliography, ignorePNum, paragraphNumberCheck, code, addStyleMap):
     '''Generates a style map based on the text in the input fields within the format template options section. Empty input fields are ignored. The style map detects templates applied to text and encloses them with an html element. For more information see: https://github.com/mwilliamson/python-mammoth#custom-style-map
     
     Headings1 -> h1:fresh
@@ -47,6 +47,12 @@ def style_map_func(custom_style_map, headings1, headings2, headings3, media, blo
         custom_style_map += f"\np[style-name='{headings2}'] => h2:fresh"
     if headings3 != "":
         custom_style_map += f"\np[style-name='{headings3}'] => h3:fresh"
+    if images != "":
+        custom_style_map += f"\np[style-name='{images}'] => img.insertimage:fresh"
+    if videos != "":
+        custom_style_map += f"\np[style-name='{videos}'] => iframe.insertvideo:fresh"
+    if audio != "":
+        custom_style_map += f"\np[style-name='{audio}'] => audio.insertaudio:fresh"
     if media != "":
         custom_style_map += f"\np[style-name='{media}'] => p.mediacaption:fresh"
     if blockquotes != "":
@@ -342,6 +348,66 @@ def add_cite(tooltiptextPath, bodyxml, footnotes):
             footnotenumber = int(node.xpath(tooltiptextPath)[0].text)
             citetext = footnotes[footnotenumber + 1]
             node.attrib['cite'] = citetext
+
+    return bodyxml
+
+def embed_images(bodyxml, dimensions):
+    '''Embeds marked image links. The text marked as an image should be a link (not a hyprelink!), which is then inserted into the "src" attribute of the image.
+    
+    If the height and width input consists of two numbers split by a comma, then use these two numbers as height and width of the image. Otherwise don't insert any width and height parameters.'''
+
+    splitDimensions = dimensions.split(',')
+    if len(splitDimensions) == 2 and splitDimensions[0].isdigit() and splitDimensions[1].isdigit():
+        width = splitDimensions[0]
+        height = splitDimensions[1]
+    else:
+        width = None
+        height = None
+        messagebox.showerror('No image dimensions used', 'No or faulty input in the video dimensions input field. No "width" and "height" parameters have been inserted.')
+
+    for node in bodyxml.xpath('//img[@class="insertimage"]'):
+        node.attrib['src'] = node.text
+        if width != None:
+            node.attrib['width'] = width
+        if height != None:
+            node.attrib['height'] = height
+        node.text = ''
+
+    return bodyxml
+
+def embed_videos(bodyxml, dimensions):
+    '''Embeds marked video links. The text marked as an video should be a link (not a hyprelink!), which is then inserted into the "src" attribute of the video.
+    
+    If the height and width input consists of two numbers split by a comma, then use these two numbers as height and width of the iframe. Otherwise don't insert any width and height parameters.'''
+
+    splitDimensions = dimensions.split(',')
+    if len(splitDimensions) == 2 and splitDimensions[0].isdigit() and splitDimensions[1].isdigit():
+        width = splitDimensions[0]
+        height = splitDimensions[1]
+    else:
+        width = None
+        height = None
+        messagebox.showerror('No video dimensions used', 'No or faulty input in the video dimensions input field. No "width" and "height" parameters have been inserted.')
+
+    for node in bodyxml.xpath('//iframe[@class="insertvideo"]'):
+        node.attrib['src'] = node.text
+        if width != None:
+            node.attrib['width'] = width
+        if height != None:
+            node.attrib['height'] = height
+        node.text = ''
+
+    return bodyxml
+
+def embed_audio(bodyxml):
+    '''Embeds marked video links. The text marked as an video should be a link (not a hyprelink!), which is then inserted into the "src" attribute of the video.'''
+
+    for node in bodyxml.xpath('//audio[@class="insertaudio"]'):
+        source = etree.Element('source')
+        source.attrib['src'] = node.text
+        node.append(source)
+        node.text = ''
+        node.attrib['controls'] = 'True'
 
     return bodyxml
 
