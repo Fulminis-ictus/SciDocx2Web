@@ -1,37 +1,34 @@
 """
-Convert academic papers in DOCX format to HTML. Tested on files generated with Word and LibreOffice.
+Convert scientific papers in DOCX format to HTML. See this project's GitHub page for more info: https://github.com/Fulminis-ictus/SciDocx2Web
 
-This is the UI that calls SciDocx2WebConversion.
+This module displays the GUI and calls SciDocx2WebConversion to start the actual conversion process.
 
-Created on March 30th, 2023\n
+Documentation last updated: 2023.05.14\n
 Author: Tim Reichert\n
-Version: 1.0
+Version: 1.0 (first public release)
 
-Based on Mammoth: https://github.com/mwilliamson/python-mammoth
-Makes use of dwasyl's added page break detection functionailty: https://github.com/dwasyl/python-mammoth
+Uses and is dependent on Mammoth: https://github.com/mwilliamson/python-mammoth\n
+Makes use of dwasyl's added page break detection functionailty: https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4
 """
 
 ### IMPORTS ###
+# Extraction and Conversion modules
+import mammoth # Convert docx to html
+from lxml import etree # XML and XPath
+import SciDocx2WebConversion as SciConvert # Handles this tool's conversion
 
-#Extraction and Conversion modules
-import mammoth #Convert docx to html
-from lxml import etree #XML and XPath functionality
-
-#Path
+# Path
 import os.path
 
-#GUI
+# GUI
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
 from tkinter import scrolledtext
 
-#Saving to and loading from .ini
+# Saving settings to and loading them from .ini
 from configparser import ConfigParser
-
-#Conversion module
-import SciDocx2WebConversion as SciConvert
 
 ### GUI ###
 # input/output variables
@@ -46,6 +43,7 @@ def inputPathFunc():
     Prompts the user to choose the file that shall be converted and replaces the input path field text with the path of the chosen file.'''
 
     global inputPath
+
     # delete current text in input field
     inputPathEntry.config(state="normal")
     inputPathEntry.delete(0, "end")
@@ -67,7 +65,7 @@ def inputPathFunc():
 def submitFunc():
     '''"Convert" button:
 
-    Prompts the user to choose the output path. Starts the conversion process by calling "convertAndExport()" afterwards.
+    Prompts the user to choose the output path. Starts the conversion process by calling "convertAndExport()".\n
     Throws an error if no input file has been chosen yet.'''
 
     global outputPath
@@ -87,13 +85,15 @@ def submitFunc():
 # enable/disable fields depending on what other fields are enabled or disabled and reset variables if necessary
 def ablePageTitleAndCssAndJavascript():
     '''Disables the "Page title" entry, "Add suggested css?" checkbox and "Add javascript to highlight navigation while scrolling?" checkbox if "Only export the body?" is checked. Does the opposite if it's unchecked.'''
-
+    # "Only export the body?" is checked: disable
     if bodyCheckVar.get():
         pageTitleEntry.config(state="disabled")
         cssCheck.config(state="disabled")
         cssCheckVar.set(False)
         javascriptCheck.config(state="disabled")
         javascriptCheckVar.set(False)
+
+    # enable
     else:
         pageTitleEntry.config(state="normal")
         cssCheck.config(state="normal")
@@ -102,10 +102,13 @@ def ablePageTitleAndCssAndJavascript():
     return
 
 def ableNavigation():
-    '''Disables the "Create navigation?" checkbox and the "Paragraph" and "Button" radio buttons if "Automatically add IDs to headings?" is unchecked. Does the opposite if it's checked.'''
+    '''Disables the "Create navigation?" checkbox and the "Paragraph" and "Button" radio buttons if "Add IDs to headings?" is unchecked. Does the opposite if it's checked.'''
 
+    # "Add IDs to headings?" is checked: enable
     if headingsIDVar.get():
         navigationCheck.config(state="normal")
+
+    # disable
     else:
         navigationCheck.config(state="disabled")
         navigationPar.config(state="disabled")
@@ -117,9 +120,12 @@ def ableNavigation():
 def ableNavigationElement():
     '''Disables the "Paragraph" and "Button" radio buttons if "Create navigation?" is unchecked. Does the opposite if it's checked.'''
 
+    # "Create navigation?" is checked: enable
     if navigationVar.get():
         navigationPar.config(state="normal")
         navigationBut.config(state="normal")
+
+    # disable
     else:
         navigationPar.config(state="disabled")
         navigationBut.config(state="disabled")
@@ -129,8 +135,11 @@ def ableNavigationElement():
 def ableIgnorePNum():
     '''Disables the "Detect paragraphs that should not be numbered..." input field if "Number the paragraphs?" is unchecked. Does the opposite if it's checked.'''
 
+    # "Number the paragraphs?" is checked: enable
     if paragraphNumberCheckVar.get():
         detectIgnorePNumEntry.config(state="normal")
+
+    # disable
     else:
         detectIgnorePNumEntry.config(state="disabled")
 
@@ -139,8 +148,11 @@ def ableIgnorePNum():
 def ablePageNum():
     '''Disables the "Which docx page should be counted..." input field if "Insert page numbers?" is unchecked. Does the opposite if it's checked.'''
 
+    # "Insert page numbers?" is checked: enable
     if pageNumberCheckVar.get():
         pageNumberStartCheckEntry.config(state="normal")
+
+    # disable
     else:
         pageNumberStartCheckEntry.config(state="disabled")
 
@@ -149,8 +161,11 @@ def ablePageNum():
 def ableAbbreviateTooltips():
     '''Disables the "Abbreviate tooltips after how many symbols?" input field if "Add tooltips to footnotes?" is unchecked. Does the opposite if it's checked.'''
 
+    # "Add tooltips to footnotes?" is checked: enable
     if tooltipsCheckVar.get():
         abbreviateTooltipsEntry.config(state="normal")
+
+    # disable
     else:
         abbreviateTooltipsEntry.config(state="disabled")
 
@@ -206,7 +221,7 @@ def resetOptions():
     
     Asks the user if they really want to reset the current options.
 
-    If yes: Resets options to their default state. The default state has been determined by the author of this software. Update the UI and write new settings to the INI file and display a message stating that settings have been reset successfully.'''
+    If yes: Resets options to their default state. The default state has been determined by the author of this software. Updates the GUI, writes new settings to the INI file and displays a message stating that settings have been reset successfully.'''
 
     reallyReset = messagebox.askquestion('Reset options', 'Are you sure you want to reset the options? Current settings will be overwritten.', icon='warning')
     if reallyReset == 'yes':
@@ -225,9 +240,9 @@ def resetOptions():
         config.set('Format templates', 'detectheadingsentry2', "FVMW Heading2")
         config.set('Format templates', 'detectheadingsentry3', "FVMW Heading3")
         config.set('Format templates', 'detectimagesentry', "FVMW Image")
-        config.set('Format templates', 'imagesdimensionsentry', "720,405")
+        config.set('Format templates', 'imagesdimensionsentry', "")
         config.set('Format templates', 'detectvideosentry', "FVMW Video")
-        config.set('Format templates', 'videosdimensionsentry', "720,405")
+        config.set('Format templates', 'videosdimensionsentry', "")
         config.set('Format templates', 'detectaudioentry', "FVMW Audio")
         config.set('Format templates', 'detectMediaentry', "FVMW Media")
         config.set('Format templates', 'detectblockquotesentry', "FVMW Blockquote")
@@ -246,7 +261,7 @@ def resetOptions():
         with open(iniLocation, "w") as configFile:
             config.write(configFile)
 
-        # update UI with reset values
+        # update GUI with reset values
         bodyCheckVar.set(True)
         cssCheckVar.set("False")
         cssCheck.configure(state="disabled")
@@ -266,9 +281,9 @@ def resetOptions():
         detectHeadingsEntry2Text.set("FVMW Heading2")
         detectHeadingsEntry3Text.set("FVMW Heading3")
         detectImagesEntryText.set("FVMW Image")
-        imagesDimensionsEntryText.set("720,405")
+        imagesDimensionsEntryText.set("")
         detectVideosEntryText.set("FVMW Video")
-        videosDimensionsEntryText.set("720,405")
+        videosDimensionsEntryText.set("")
         detectAudioEntryText.set("FVMW Audio")
         detectMediaEntryText.set("FVMW Media")
         detectBlockquotesEntryText.set("FVMW Blockquote")
@@ -328,21 +343,11 @@ conf_paragraphnumbercheckvar = config.getboolean('Citability', 'paragraphnumberc
 conf_pagenumbercheckvar = config.getboolean('Citability', 'pagenumbercheckvar')
 conf_pagenumberstartcheckvar = config.get('Citability', 'pagenumberstartcheckvar')
 
-## INTERFACE SETUP
+## GUI SETUP
 # window
 window = tk.Tk()
 window.title('SciDocx2Web')
 window.resizable(False, False)
-
-"""# notebook
-notebook = ttk.Notebook(window)
-tab1 = ttk.Frame(notebook)
-tab2 = ttk.Frame(notebook)
-
-notebook.add(tab1, text="General")
-notebook.add(tab2, text="Style Map")
-
-notebook.grid()"""
 
 # add scrollbar
 scrollCanvas = tk.Canvas(window, width=600, height=450)
@@ -361,6 +366,7 @@ scrollCanvas.create_window((0,0), window=scrollSecondFrame, anchor="nw")
 
 def _on_mousewheel(event):
     '''Makes the mouse wheel scroll the canvas.'''
+
     scrollCanvas.yview_scroll(int(-1*(event.delta/120)), "units")
 
     return
@@ -405,7 +411,7 @@ javascriptCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 # "Page title"
 row += 1
 
-pageTitleLabel = ttk.Label(frameBody, text='Page title')
+pageTitleLabel = ttk.Label(frameBody, text='Page title:')
 pageTitleLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 pageTitleEntryText = tk.StringVar(value=conf_pagetitleentrytext)
@@ -416,16 +422,16 @@ else:
     pageTitleEntry.configure(state="normal")
 pageTitleEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
 
-# --Heading IDs and navigation--
+# --Navigation--
 row += 1
 
 # frame
-frameHeadingsNav = tk.LabelFrame(scrollSecondFrame, text='Heading IDs and navigation')
+frameHeadingsNav = tk.LabelFrame(scrollSecondFrame, text='Navigation')
 frameHeadingsNav.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
-# "Automatically add IDs to headings?"
+# "Add IDs to headings?"
 headingsIDVar = tk.BooleanVar(value=conf_headingsidvar)
-headingsIDCheck = tk.Checkbutton(frameHeadingsNav, text='Automatically add IDs to headings?',variable=headingsIDVar, onvalue=True, offvalue=False, command=ableNavigation)
+headingsIDCheck = tk.Checkbutton(frameHeadingsNav, text='Add IDs to headings?',variable=headingsIDVar, onvalue=True, offvalue=False, command=ableNavigation)
 headingsIDCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 # "Create navigation?"
@@ -458,7 +464,7 @@ navigationBut.grid(sticky="W", row=row, column=2, pady=(0, 10), padx=(20,20))
 
 # --Tooltips settings--
 # frame
-frameTooltips = tk.LabelFrame(scrollSecondFrame, text='Tooltips settings')
+frameTooltips = tk.LabelFrame(scrollSecondFrame, text='Tooltip settings')
 frameTooltips.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 # "Add tooltips to footnote?"
@@ -471,7 +477,7 @@ tooltipsCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 # "Abbreviate tooltips..."
 row += 1
 
-abbreviateTooltipsLabel = tk.Label(frameTooltips, text='Abbreviate tooltips after how many symbols? Input an integer.\nLeave empty to skip abbreviation.', justify="left")
+abbreviateTooltipsLabel = tk.Label(frameTooltips, text='Abbreviate tooltips after how many symbols? Input a number.\nLeave empty to skip abbreviation.', justify="left")
 abbreviateTooltipsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 abbreviateTooltipsEntryText = tk.StringVar(value=conf_abbreviatetooltipsentry)
@@ -502,7 +508,7 @@ pageNumberCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,20))
 
 row += 1
 
-pageNumberStartCheckLabel = tk.Label(framePar, text='Which docx page should be counted as the first page?\nInput an integer.', justify="left")
+pageNumberStartCheckLabel = tk.Label(framePar, text='Which docx page should be counted as the first page?\nInput a number.', justify="left")
 pageNumberStartCheckLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 pageNumberStartCheckEntryText = tk.StringVar(value=conf_pagenumberstartcheckvar)
@@ -522,7 +528,7 @@ frameDetection.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 # "Detect headings..."
 row += 1
 
-detectHeadingsLabel = tk.Label(frameDetection, text='Detect headings by which format template name? 1. level (h1).\nLeave empty to skip detection.', justify="left")
+detectHeadingsLabel = tk.Label(frameDetection, text='Detect 1. level headings (h1) by which format template name?\nLeave empty to skip detection.', justify="left")
 detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 detectHeadingsEntry1Text = tk.StringVar(value=conf_detectheadingsentry1)
@@ -531,7 +537,7 @@ detectHeadingsEntry1.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20
 
 row += 1
 
-detectHeadingsLabel = tk.Label(frameDetection, text='Detect headings by which format template name? 2. level (h2).\nLeave empty to skip detection.', justify="left")
+detectHeadingsLabel = tk.Label(frameDetection, text='Detect 2. level headings (h2) by which format template name?\nLeave empty to skip detection.', justify="left")
 detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 detectHeadingsEntry2Text = tk.StringVar(value=conf_detectheadingsentry2)
@@ -540,7 +546,7 @@ detectHeadingsEntry2.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20
 
 row += 1
 
-detectHeadingsLabel = tk.Label(frameDetection, text='Detect headings by which format template name? 3. level (h3).\nLeave empty to skip detection.', justify="left")
+detectHeadingsLabel = tk.Label(frameDetection, text='Detect 3. level headings (h3) by which format template name?\nLeave empty to skip detection.', justify="left")
 detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 detectHeadingsEntry3Text = tk.StringVar(value=conf_detectheadingsentry3)
@@ -559,7 +565,7 @@ detectImagesEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20
 
 row += 1
 
-imagesDimensionsLabel = tk.Label(frameDetection, text='Which dimensions should the video embed have?\nSeparate X and Y value with a comma (X,Y).\nLeave empty to use default (720,450).', justify="left")
+imagesDimensionsLabel = tk.Label(frameDetection, text='Which dimensions should the image embed have?\nSeparate X and Y value with a comma (X,Y).\nLeave empty to use original dimensions.', justify="left")
 imagesDimensionsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 imagesDimensionsEntryText = tk.StringVar(value=conf_imagesdimensionsentry)
@@ -578,7 +584,7 @@ detectVideosEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20
 
 row += 1
 
-videosDimensionsLabel = tk.Label(frameDetection, text='Which dimensions should the video embed have?\nSeparate X and Y value with a comma (X,Y).\nLeave empty to use default (720,450).', justify="left")
+videosDimensionsLabel = tk.Label(frameDetection, text='Which dimensions should the video embed have?\nSeparate X and Y value with a comma (X,Y).\nLeave empty to use original dimensions.', justify="left")
 videosDimensionsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 videosDimensionsEntryText = tk.StringVar(value=conf_videosdimensionsentry)
@@ -707,111 +713,111 @@ submitButton.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 ### CSS ###
 # body
-bodycss = '\t\t\tbody {margin-left: 15%; margin-right: 15%;}'
+bodycss = 'body {margin-left: 15%; margin-right: 15%;}'
 
 # tooltips
-tooltipcss = '''\n\t\t\t/* Tooltip container */
-    .tooltippop {
-    position: relative;
-    }
+tooltipcss = '''\n/* Tooltip container */
+.tooltippop {
+position: relative;
+}
 
-    /* Tooltip text */
-    .tooltippop [role="tooltip"] {
-    font-size: 12pt;
-    visibility: hidden;
-    width: max-content;
-    max-width: 400px;
-    background-color: #fff;
-    color: #454545;
-    text-align: left;
-    padding: 5px 5px;
-    border-radius: 5px;
-    border: 2px solid black;
+/* Tooltip text */
+.tooltippop [role="tooltip"] {
+font-size: 12pt;
+visibility: hidden;
+width: max-content;
+max-width: 400px;
+background-color: #fff;
+color: #454545;
+text-align: left;
+padding: 5px 5px;
+border-radius: 5px;
+border: 2px solid black;
 
-    /* Position the tooltip text */
-    position: absolute;
-    z-index: 1;
-    bottom: 125%;
-    left: 50%;
-    margin-left: -60px;
+/* Position the tooltip text */
+position: absolute;
+z-index: 1;
+bottom: 125%;
+left: 50%;
+margin-left: -60px;
 
-    /* Fade in tooltip */
-    opacity: 0;
-    transition: opacity 0.3s;
-    }
+/* Fade in tooltip */
+opacity: 0;
+transition: opacity 0.3s;
+}
 
-    /* Show the tooltip text when you mouse over the tooltip container */
-    .tooltippop:hover [role="tooltip"] {
-    visibility: visible;
-    opacity: 1;
-    }'''
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltippop:hover [role="tooltip"] {
+visibility: visible;
+opacity: 1;
+}'''
 
 # grids
-gridcss = '''\n\t\t\t/* Grid */
-    .gridContainer {
-        display: grid;
-        gap: 50px 50px;
-        grid-template-columns: 12% 68%;
-    }
+gridcss = '''\n/* Grid */
+.gridContainer {
+    display: grid;
+    gap: 50px 50px;
+    grid-template-columns: 12% 68%;
+}
 
-    .navGrid {
-        grid-column-start: 1; 
-        grid-column-end: 2; 
-        grid-row-start: 1; 
-        grid-row-end: 2;
-        position: sticky;
-        top: 0;
-        align-self: start;
-        padding-right: 5%;
-        height: 100vh;
-        overflow: auto;
-    }
+.navGrid {
+    grid-column-start: 1; 
+    grid-column-end: 2; 
+    grid-row-start: 1; 
+    grid-row-end: 2;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    padding-right: 5%;
+    height: 100vh;
+    overflow: auto;
+}
 
-    .mainGrid {
-        grid-column-start: 2; 
-        grid-column-end: 3; 
-        grid-row-start: 1; 
-        grid-row-end: 2;
-    }'''
+.mainGrid {
+    grid-column-start: 2; 
+    grid-column-end: 3; 
+    grid-row-start: 1; 
+    grid-row-end: 2;
+}'''
 
 # paragraphs
-paragraphcss = '\n\t\t\tp {font-size: 18px; color: #454545; text-align: left; line-height: 2;}'
+paragraphcss = '\np {font-size: 18px; color: #454545; text-align: left; line-height: 2;}'
 
 # pagenumbers
-pagenumbercss = '\t\t\t.pagenumber {font-size: 14px; color: #454545; text-align: left; font-weight:400; background-color: #E7E7E7;}'
+pagenumbercss = '.pagenumber {font-size: 14px; color: #454545; text-align: left; font-weight:400; background-color: #E7E7E7;}'
 
 # buttons
-buttoncss = '\t\t\tbutton {font-size: 14px; text-align: left; width: 100%;}\n\t\t\tbutton a {display: block;}'
+buttoncss = 'button {font-size: 14px; text-align: left; width: 100%;}\nbutton a {display: block;}'
 
 # highlighted nav
-highlightnavcss = '\t\t\tnav p a.active {background-color: #D7D7D7;}\n\t\t\tnav button a.active {background-color: #D7D7D7;}'
+highlightnavcss = 'nav p a.highlightnav {background-color: #D7D7D7;}\nnav button a.active {background-color: #D7D7D7;}'
 
 # headings
-headingcss = '\t\t\th1, h2, h3 {font-size: 28px; color: #454545; text-align: left; padding-top: 18px; padding-bottom: 6px;}'
+headingcss = 'h1, h2, h3 {font-size: 28px; color: #454545; text-align: left; padding-top: 18px; padding-bottom: 6px;}'
 
 # links
-linkscss = '\t\t\ta:link {color: #0000ff; text-decoration:none;}\n\t\t\ta:visited {color: #800080; text-decoration:none;}'
+linkscss = 'a:link {color: #0000ff; text-decoration:none;}\na:visited {color: #800080; text-decoration:none;}'
 
 # lists
-listscss = '\t\t\tli {font-size: 18px; color: #454545;}'
+listscss = 'li {font-size: 18px; color: #454545;}'
 
 # tables
-tablecss = '\t\t\ttable {margin-top: 28px;}\n\t\t\ttable, th, td {border: 1px solid;}\n\t\t\ttd {padding: 0px 5px;}\n\t\t\tcaption {caption-side: bottom; text-align: left; font-size: 15px;}'
+tablecss = 'table {margin-top: 28px;}\ntable, th, td {border: 1px solid;}\ntd {padding: 0px 5px;}\ncaption {caption-side: bottom; text-align: left; font-size: 15px;}'
 
 # horizontal rules
-hrcss = '\t\t\thr {margin-top: 28px;}'
+hrcss = 'hr {margin-top: 28px;}'
 
 # blockquotes
-blockquotecss = '\t\t\tblockquote {display: block; font-size: 18px; color: #454545; text-align: left; padding-left: 5%; padding-right: 15%; padding-top: 18px; padding-bottom: 18px;}'
+blockquotecss = 'blockquote {display: block; font-size: 18px; color: #454545; text-align: left; padding-left: 5%; padding-right: 15%; padding-top: 18px; padding-bottom: 18px;}'
 
 # mediacaptions
-mediacaptioncss = '\t\t\t.mediacaption {display: block; font-size: 15px; color: #454545; text-align: left;}'
+mediacaptioncss = '.mediacaption {display: block; font-size: 15px; color: #454545; text-align: left;}'
 
 #bibliography
-bibliographycss = '\t\t\t.bibliography {display: block; font-size: 18px; color: #454545; text-align: left; text-indent: -5%; margin-left: 5%;}'
+bibliographycss = '.bibliography {display: block; font-size: 18px; color: #454545; text-align: left; text-indent: -5%; margin-left: 5%;}'
 
 # assembly of css
-css = '<style>' + '\n' + bodycss + '\n' + tooltipcss + '\n' + gridcss + '\n' + paragraphcss + '\n' + pagenumbercss + '\n\n' + buttoncss + '\n\n' + highlightnavcss + '\n\n' + headingcss + '\n\n' + linkscss + '\n\n' + listscss + '\n\n' + tablecss + '\n\n' + hrcss + '\n\n' + blockquotecss + '\n\n' + mediacaptioncss + '\n\n' + bibliographycss + '\n' '\t\t</style>' + '\n\n'
+css = '<style>' + '\n' + bodycss + '\n' + tooltipcss + '\n' + gridcss + '\n' + paragraphcss + '\n\n' + pagenumbercss + '\n\n' + buttoncss + '\n\n' + highlightnavcss + '\n\n' + headingcss + '\n\n' + linkscss + '\n\n' + listscss + '\n\n' + tablecss + '\n\n' + hrcss + '\n\n' + blockquotecss + '\n\n' + mediacaptioncss + '\n\n' + bibliographycss + '\n' '\t\t</style>' + '\n\n'
 
 # convert style code to XML element
 cssXML = etree.fromstring(css)
@@ -836,15 +842,15 @@ function start() {
             }
         });
         navPA.forEach((a) => {
-            a.classList.remove("active");
+            a.classList.remove("highlightnav");
             if (a.getAttribute("href") == '#' + current) {
-                a.classList.add("active");
+                a.classList.add("highlightnav");
             }
         });
         navButA.forEach((a) => {
-            a.classList.remove("active");
+            a.classList.remove("highlightnav");
             if (a.getAttribute("href") == '#' + current) {
-                a.classList.add("active");
+                a.classList.add("highlightnav");
             }
         });
     });
@@ -856,6 +862,7 @@ window.addEventListener('load', () => {
 </script>
 """
 javascriptXML = etree.fromstring(javascript)
+
 
 ### CONVERT ###
 def convertAndExport():
@@ -877,7 +884,7 @@ def convertAndExport():
     # add wbr to footnotes
     footnotesAbbr = SciConvert.add_wbr_footnotes(footnotesAbbr, abbreviateTooltipsEntry.get())
 
-    # insert footnotes into main text    
+    # insert footnotes into main text
     bodyxml = SciConvert.insert_footnotes(tooltipsCheckVar.get(), bodyxml, footnotesAbbr)
 
     # adjust footnote sups
@@ -895,11 +902,10 @@ def convertAndExport():
     # add heading IDs
     bodyxml = SciConvert.add_Head_IDs(headingsIDVar.get(), bodyxml)
 
-    # remove TOCs
+    # remove TOCs and Heads from heading IDs
     bodyxml = SciConvert.remove_toc_and_head(bodyxml)
 
     # create navigation
-    #findH1 = bodyxml.findall('.//h1|.//h2|.//h3')
     findH1 = bodyxml.xpath('.//*[self::h1 or self::h2 or self::h3]')
     navigationElement = etree.Element('nav')
     commentNavigation = etree.Comment(' Navigation ')
@@ -910,7 +916,7 @@ def convertAndExport():
     navGridDiv = SciConvert.create_navigation(navigationVar.get(), navigationTypeVar.get(), findH1, navigationElement, commentNavigation, h1Navigation, navGridDiv)
 
     # add cite to blockquotes
-    tooltiptextPath = './/sup/a[contains(@id, "footnote-ref")]'
+    tooltiptextPath = './/a[contains(@id, "footnote-ref")]/sup'
     bodyxml = SciConvert.add_cite(tooltiptextPath, bodyxml, footnotes)
 
     # embed images
@@ -922,25 +928,25 @@ def convertAndExport():
     # embed audio
     bodyxml = SciConvert.embed_audio(bodyxml)
 
-    # file insertion messages
+    # add file insertion messages above mediacaptions
     bodyxml = SciConvert.file_insertion_message(bodyxml)
 
     # move table captions
     bodyxml = SciConvert.move_table_caption(bodyxml)
 
     # create page breaks
-    bodyxml = SciConvert.page_breaks(pageNumberCheckVar.get(), pageNumberStartCheckEntry.get(), bodyxml)
+    bodyxml = SciConvert.page_breaks(pageNumberCheckVar.get(), pageNumberStartCheckEntry.get(), bodyxml, bodyCheckVar.get())
 
     # number paragraphs
     bodyxml = SciConvert.paragraph_numbering(paragraphNumberCheckVar.get(), bodyxml)
 
-    # create sections - haven't been able to figure it out yet
+    # create sections (haven't been able to figure this out yet)
     #bodyxml = SciConvert.create_sections(bodyxml)
 
     # assemble file
     exportableBodyxml = SciConvert.assemble_html(navigationVar.get(), bodyCheckVar.get(), cssCheckVar.get(), cssXML, navGridDiv, bodyxml, javascriptXML, javascriptCheckVar.get())
 
-    # unescape and re-escape HTML entities
+    # unescape and escape HTML characters
     exportableBodyxml = SciConvert.escape_unescape(exportableBodyxml)
 
     # write file
