@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SciDocx2WebConversion module &mdash; SciDocx2Web 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="SciDocx2WebUI module" href="SciDocx2WebUI.html" />
+    <link rel="prev" title="Documentation" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SciDocx2Web
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">SciDocx2WebConversion module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.abbreviate_footnotes"><code class="docutils literal notranslate"><span class="pre">abbreviate_footnotes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.add_Head_IDs"><code class="docutils literal notranslate"><span class="pre">add_Head_IDs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.add_cite"><code class="docutils literal notranslate"><span class="pre">add_cite()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.add_wbr_footnotes"><code class="docutils literal notranslate"><span class="pre">add_wbr_footnotes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.add_wbr_text"><code class="docutils literal notranslate"><span class="pre">add_wbr_text()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.adjust_footnotes"><code class="docutils literal notranslate"><span class="pre">adjust_footnotes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.assemble_html"><code class="docutils literal notranslate"><span class="pre">assemble_html()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.create_footnotes_list"><code class="docutils literal notranslate"><span class="pre">create_footnotes_list()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.create_navigation"><code class="docutils literal notranslate"><span class="pre">create_navigation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.create_sections"><code class="docutils literal notranslate"><span class="pre">create_sections()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.embed_audio"><code class="docutils literal notranslate"><span class="pre">embed_audio()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.embed_images"><code class="docutils literal notranslate"><span class="pre">embed_images()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.embed_videos"><code class="docutils literal notranslate"><span class="pre">embed_videos()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.enclose_body"><code class="docutils literal notranslate"><span class="pre">enclose_body()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.escape_unescape"><code class="docutils literal notranslate"><span class="pre">escape_unescape()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.file_insertion_message"><code class="docutils literal notranslate"><span class="pre">file_insertion_message()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.footnotes_bottom_adjust"><code class="docutils literal notranslate"><span class="pre">footnotes_bottom_adjust()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.insert_footnotes"><code class="docutils literal notranslate"><span class="pre">insert_footnotes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.move_table_caption"><code class="docutils literal notranslate"><span class="pre">move_table_caption()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.page_breaks"><code class="docutils literal notranslate"><span class="pre">page_breaks()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.paragraph_numbering"><code class="docutils literal notranslate"><span class="pre">paragraph_numbering()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.remove_toc_and_head"><code class="docutils literal notranslate"><span class="pre">remove_toc_and_head()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.style_map_func"><code class="docutils literal notranslate"><span class="pre">style_map_func()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.write_html"><code class="docutils literal notranslate"><span class="pre">write_html()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SciDocx2WebUI.html">SciDocx2WebUI module</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SciDocx2Web</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Documentation</a></li>
+      <li class="breadcrumb-item active">SciDocx2WebConversion module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/SciDocx2WebConversion.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-SciDocx2WebConversion">
+<span id="scidocx2webconversion-module"></span><h1>SciDocx2WebConversion module<a class="headerlink" href="#module-SciDocx2WebConversion" title="Permalink to this heading"></a></h1>
+<p>Convert scientific papers in DOCX format to HTML. See this project’s GitHub page for more info: <a class="reference external" href="https://github.com/Fulminis-ictus/SciDocx2Web">https://github.com/Fulminis-ictus/SciDocx2Web</a></p>
+<p>This is a module that is called by SciDocx2WebUI. It handles all of the actual conversion functions.</p>
+<p>Documentation last updated: 2023.05.16</p>
+<p>Author: Tim Reichert</p>
+<p>Version: 1.0 (first public release)</p>
+<p>Uses and is dependent on Mammoth: <a class="reference external" href="https://github.com/mwilliamson/python-mammoth">https://github.com/mwilliamson/python-mammoth</a></p>
+<p>Makes use of dwasyl’s added page break detection functionailty: <a class="reference external" href="https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4">https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4</a></p>
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.abbreviate_footnotes">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">abbreviate_footnotes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">footnotes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abbreviateFootnotesNumber</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#abbreviate_footnotes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.abbreviate_footnotes" title="Permalink to this definition"></a></dt>
+<dd><p>Abbreviates footnotes according to the number in the “Abbreviate tooltips after how many symbols?” input field and adds “[…]” to the end of abbreviated footnotes.</p>
+<p>If the input field is empty:</p>
+<p>Skips this function.</p>
+<p>If something other than an integer is input:</p>
+<p>Tooltip abbreviation is skipped with an error message indicating that the abbreviation was unsuccessful but the rest of the conversion process continues as normal.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.add_Head_IDs">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">add_Head_IDs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">headingsIDVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#add_Head_IDs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.add_Head_IDs" title="Permalink to this definition"></a></dt>
+<dd><p>If “Add IDs to headings?” is checked:</p>
+<p>Adds IDs to all found &lt;h1&gt; elements following the form “headingN” where “N” is an integer counting upwards.</p>
+<p>Example: &lt;h1 id=”heading1”&gt;First heading&lt;/h1&gt;, &lt;h1 id=”heading2”&gt;Second heading&lt;/h1&gt;, &lt;h2 id=”heading3”&gt;Subheading of second heading&lt;/h2&gt; etc.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.add_cite">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">add_cite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tooltiptextPath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">footnotes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#add_cite"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.add_cite" title="Permalink to this definition"></a></dt>
+<dd><p>Adds a cite attribute to &lt;blockquote&gt; elements. Inserts the footnote text as the cite value by using the footnote number at the end of the blockquote (minus one since the list starts counting at 0 but the footnotes start counting at 1) as the index of the footnote list.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.add_wbr_footnotes">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">add_wbr_footnotes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">footnotesAbbr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abbreviateFootnotesNumber</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#add_wbr_footnotes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.add_wbr_footnotes" title="Permalink to this definition"></a></dt>
+<dd><p>Finds all slashes within footnotes and adds &lt;wbr&gt; tags after them to ensure that links automatically receive a line break when necessary.</p>
+<p>If footnotes are abbreviated:</p>
+<p>Apply to all text. Since all HTML tags have been removed in a previous step there’s no need to worry about HTML tags being affected.</p>
+<p>Else:</p>
+<p>Look for text in &lt;a&gt; tags specifically so that other HTML tags aren’t affected.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.add_wbr_text">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">add_wbr_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#add_wbr_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.add_wbr_text" title="Permalink to this definition"></a></dt>
+<dd><p>Finds all slashes in links within the main text and adds &lt;wbr&gt; tags to ensure that links automatically receive line breaks after slashes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.adjust_footnotes">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">adjust_footnotes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tooltipsCheckVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#adjust_footnotes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.adjust_footnotes" title="Permalink to this definition"></a></dt>
+<dd><p>If “Add tooltips to footnotes?” is checked:</p>
+<p>Removes the &lt;sup&gt; elements and creates new ones within the &lt;a&gt; tags. Also removes the square brackets around the footnote numbers, and moves the numbers from the &lt;a&gt; tags into the &lt;sup&gt; tags.</p>
+<p>This whole process ensures that only the footnote numbers, not the footnote text within the tooltips, is enclosed by the &lt;sup&gt; elements.</p>
+<p>Example: &lt;sup&gt;&lt;span class=”tooltip”&gt;&lt;a href=”#footnote-N” id=”footnote-ref-N”&gt;[N]&lt;/a&gt;&lt;span class=”tooltiptext”&gt;Footnote content.&lt;/span&gt;&lt;/span&gt;&lt;/sup&gt; -&gt;</p>
+<p>&lt;span class=”tooltippop” aria-describedby=”tooltip-N”&gt;&lt;a href=”#footnote-N” id=”footnote-ref-N”&gt;&lt;sup&gt;N&lt;/sup&gt;&lt;/a&gt;&lt;span role=”tooltip” id=”tooltip-N”&gt;Footnote content.&lt;/span&gt;&lt;/span&gt;</p>
+<p>Else:</p>
+<p>Only the square brackets around the footnote numbers are removed.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.assemble_html">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">assemble_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">navigationVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodyCheckVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cssCheckVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cssXML</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">navGridDiv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">javascriptXML</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">javascriptCheckVar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#assemble_html"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.assemble_html" title="Permalink to this definition"></a></dt>
+<dd><p>Assembles the individual sections (navigation, css, body) and writes them to an html file.</p>
+<p>If “Create navigation?” is unchecked:</p>
+<p>Skips navigation section.</p>
+<p>If “Add suggested css?” is unchecked:</p>
+<p>Skips css section.</p>
+<p>If “Only export the body?” is unchecked:</p>
+<p>“&lt;!DOCTYPE html&gt;” is added to the beginning to create a well formed html file. This is not necessary if only the body is exported since it’s an incomplete html file without the &lt;head&gt; element.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.create_footnotes_list">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">create_footnotes_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abbreviateFootnotesNumber</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#create_footnotes_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.create_footnotes_list" title="Permalink to this definition"></a></dt>
+<dd><p>Compiles a list of footnotes. Iterates over all &lt;li&gt; elements in the footnote list created by mammoth and saves their contents to a python list.</p>
+<p>If footnotes are abbreviated:</p>
+<p>Get footnote text without HTML tags to prevent tags that are never closed due to the abbreviation process.</p>
+<p>Else:</p>
+<p>Get the footnote text with all HTML tags.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.create_navigation">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">create_navigation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">navigationVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">navigationTypeVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">findH1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">navigationElement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commentNavigation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h1Navigation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">navGridDiv</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#create_navigation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.create_navigation" title="Permalink to this definition"></a></dt>
+<dd><p>If “Create navigation?” is checked:</p>
+<p>Creates a navigation by compiling a list of all &lt;h1&gt;, &lt;h2&gt; and &lt;h3&gt; elements. Each navigation item is a paragraph or a button, depending on which radio button option is activated in the GUI. Adds links with href attributes that link each navigation item to their respective heading.</p>
+<p>Example: &lt;button&gt;&lt;a href=”#heading1”&gt;Navigation to first heading&lt;/a&gt;&lt;/button&gt;</p>
+<p>When compiling the headings text, the &lt;h1&gt;, &lt;h2&gt; and &lt;h3&gt; tags and new page markers are removed from the navigation.</p>
+<p>Encloses everything with a &lt;div&gt; with the class “navGrid”.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.create_sections">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">create_sections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#create_sections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.create_sections" title="Permalink to this definition"></a></dt>
+<dd><p>This code was planned to create sections based on chapters but it’s not functional.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.embed_audio">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">embed_audio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#embed_audio"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.embed_audio" title="Permalink to this definition"></a></dt>
+<dd><p>Embeds audio links that have the “insertaudio” attribute. The text marked as audio should be a link (not a hyperlink!), which is then inserted into the “src” attribute of the &lt;source&gt; element inside the &lt;audio&gt; element.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.embed_images">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">embed_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#embed_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.embed_images" title="Permalink to this definition"></a></dt>
+<dd><p>Embeds image links that have the “insertimage” attribute. The text marked as an image should be a link (not a hyperlink!), which is then inserted into the “src” attribute of the image.</p>
+<p>Else if the height and width input is empty:</p>
+<p>Don’t insert any width and height parameters.</p>
+<p>Else:</p>
+<p>Don’t insert any width and height parameters and display an error.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.embed_videos">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">embed_videos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dimensions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#embed_videos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.embed_videos" title="Permalink to this definition"></a></dt>
+<dd><p>Embeds video links that have the “insertvideo” attribute. The text marked as a video should be a link (not a hyperlink!), which is then inserted into the “src” attribute of the video.</p>
+<p>If the height and width input consists of two numbers split by a comma:</p>
+<p>Use these two numbers as height and width of the iframe.</p>
+<p>Else if the height and width input is empty:</p>
+<p>Don’t insert any width and height parameters.</p>
+<p>Else:</p>
+<p>Don’t insert any width and height parameters and display an error.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.enclose_body">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">enclose_body</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodyCheckVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pageTitleEntryText</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#enclose_body"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.enclose_body" title="Permalink to this definition"></a></dt>
+<dd><p>Encloses the imported file with &lt;body&gt; tags to make it navigable with xpath.</p>
+<p>If “Only export the body?” is unchecked:</p>
+<p>Adds &lt;html&gt;, &lt;head&gt; and &lt;title&gt; elements. Also sets the charset to UTF-8 and adds the page title if the “Page title:” field isn’t empty.</p>
+<p>Additionally, the grid container and main grid &lt;div&gt; tags are inserted and new page markers are unescaped.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.escape_unescape">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">escape_unescape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exportableBodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#escape_unescape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.escape_unescape" title="Permalink to this definition"></a></dt>
+<dd><p>Unescapes the file to make sure HTML tags are applied properly instead of them being displayed as escaped HTML. Re-escapes HTML symbols that are marked as example code.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.file_insertion_message">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">file_insertion_message</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#file_insertion_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.file_insertion_message" title="Permalink to this definition"></a></dt>
+<dd><p>Adds the comment “Insert Media” before &lt;p&gt; elements that have the media caption class to alert the user to the fact that they might need to manually insert media at that line.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.footnotes_bottom_adjust">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">footnotes_bottom_adjust</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commentBottomFootnotes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">breakElement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hrElement</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#footnotes_bottom_adjust"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.footnotes_bottom_adjust" title="Permalink to this definition"></a></dt>
+<dd><p>If a footnote list at the bottom of the main text exists:</p>
+<p>Adds elements before the footnote list at the bottom to separate it from the rest: &lt;br/&gt;, &lt;hr/&gt; and the comment “Bottom footnotes”.</p>
+<p>Also adds “aria-label” attributes that describe the links at the end of the footntoes as links back to the footnotes in the main text.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.insert_footnotes">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">insert_footnotes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tooltipsCheckVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">footnotesAbbr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#insert_footnotes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.insert_footnotes" title="Permalink to this definition"></a></dt>
+<dd><p>If “Add tooltips to footnotes?” is checked:</p>
+<p>Finds &lt;sup&gt; tags that contain links with an ID starting with “footnote-ref”, which denotes footnote numbers in the main text. It then creates a tooltip &lt;span&gt; and appends it to the end of the found &lt;sup&gt; tags. The whole element, including the &lt;sup&gt; element and tooltip &lt;span&gt; element, is then enclosed with a tooltippop &lt;span&gt; element. Structure derived from: <a class="reference external" href="https://www.w3schools.com/howto/howto_css_tooltip.asp">https://www.w3schools.com/howto/howto_css_tooltip.asp</a></p>
+<p>Also adds “role” and “aria-attribute” attributes for accessibility.</p>
+<p>Conversion example: &lt;sup&gt;&lt;a href=”#footnote-N” id=”footnote-ref-N”&gt;[N]&lt;/a&gt;&lt;/sup&gt; -&gt;</p>
+<p>&lt;span class=”tooltippop” aria-describedby=”tooltip-N”&gt;&lt;sup&gt;&lt;a href=”#footnote-N” id=”footnote-ref-N”&gt;[N]&lt;/a&gt;&lt;span role=”tooltip” id=”tooltip-N”&gt;Footnote content.&lt;/span&gt;&lt;/sup&gt;&lt;/span&gt;</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.move_table_caption">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">move_table_caption</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#move_table_caption"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.move_table_caption" title="Permalink to this definition"></a></dt>
+<dd><p>Moves the &lt;caption&gt; elements to the beginning of the &lt;table&gt; elements for semantic reasons.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.page_breaks">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">page_breaks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pageNumberCheckVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pageNumberStartCheckVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodyCheckVar</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#page_breaks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.page_breaks" title="Permalink to this definition"></a></dt>
+<dd><p>If “Insert page numbers?” is checked</p>
+<p>Inserts a &lt;sub class=”pagenumber”&gt; element at the very beginning of the text (only page breaks are marked automatically, meaning the first page needs to receive an element manually). Finds all &lt;sub class=”pagenumber”&gt; elements and inserts a page number following the form {N} where N is an integer counting upwards. N is calculated as 2-pageNumberStart. If the page number start is set to 1 then the page number at the very top would receive the number 1. If the page number start is set to 2 then the page number at the very top would receive the number 0 etc. Page number indicators that would receive a number &lt;= 0 receive no text instead, which makes them invisible.</p>
+<p>Else:</p>
+<p>Finds &lt;sub class=”pagenumber”&gt; tags that denote a new page beginning and deletes their content.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.paragraph_numbering">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">paragraph_numbering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paragraphNumberCheckVar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#paragraph_numbering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.paragraph_numbering" title="Permalink to this definition"></a></dt>
+<dd><p>If “Number the paragraphs?” is checked:</p>
+<p>Adds numbers to the beginning of each paragraph and each blockquote following the form [N] where N is an integer counting upwards. Skips paragraphs that have the “ignorePNum”, “mediacaption” or “bibliography” classes.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.remove_toc_and_head">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">remove_toc_and_head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#remove_toc_and_head"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.remove_toc_and_head" title="Permalink to this definition"></a></dt>
+<dd><p>Removes Word’s “Table Of Contents” and “_heading” IDs. Both of those consist of non-closed “a”-tags that can lead to display errors or mess with the navigation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.style_map_func">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">style_map_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_style_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headings1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headings2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headings3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">videos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">audio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">media</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blockquotes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tableCaptions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bibliography</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignorePNum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paragraphNumberCheck</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">addStyleMap</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#style_map_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.style_map_func" title="Permalink to this definition"></a></dt>
+<dd><p>Generates a style map based on the format template name input fields. Empty input fields are ignored. The style map detects format templates applied to text and encloses them with an html element. For more information see: <a class="reference external" href="https://github.com/mwilliamson/python-mammoth#custom-style-map">https://github.com/mwilliamson/python-mammoth#custom-style-map</a></p>
+<p>Headings1 -&gt; h1:fresh</p>
+<p>Headings2 -&gt; h2:fresh</p>
+<p>Headings3 -&gt; h3:fresh</p>
+<p>Image -&gt; img.insertimage:fresh</p>
+<p>Video -&gt; iframe.insertvideo:fresh</p>
+<p>Audio -&gt; audio.insertaudio:fresh</p>
+<p>Media -&gt; p.mediacaption:fresh</p>
+<p>Blockquotes -&gt; blockquote:fresh</p>
+<p>Table Captions -&gt; caption:fresh</p>
+<p>Bibliography -&gt; p.bibliography:fresh</p>
+<p>Ignore Paragraph Numbering -&gt; p.ignorePNum:fresh</p>
+<p>Code -&gt; code</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SciDocx2WebConversion.write_html">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">write_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exportableBodyxml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputPath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#write_html"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.write_html" title="Permalink to this definition"></a></dt>
+<dd><p>Write to file.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="SciDocx2WebUI.html" class="btn btn-neutral float-right" title="SciDocx2WebUI module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Tim Reichert.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

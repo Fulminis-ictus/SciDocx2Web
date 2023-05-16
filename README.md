@@ -116,7 +116,7 @@ Currently know issues or missing features are:
 - **Why are there empty, numbered paragraphs in my output document?** Make sure there are no "seemingly empty" paragraphs in your DOCX document that contain an easy to overlook space. Empty paragraphs are usually ignored, but if you accidentally pressed the space bar while editing that paragraph, then it's counted as a paragraph.
 - **Why are no tooltips being displayed above footnotes when I hover over them?** Make sure the "Only export the body?" option is unchecked and the "Add suggested css?" option is checked. The tooltip CSS is necessary for the tooltips to work (see How to use - CSS).
 - **How can I fix the problem that footnote tooltips are exiting the page's boundaries?** Insert a number into the "Abbreviate tooltips after how many symbols?" input field in the options. Note that this also removes any markup inside the tooltips (meaning text won't be cursive anymore, links won't be hyperlinks etc.).
-- **"Why is my video embed not working?"** Make sure you're using the embed link and not the normal link. YouTube's embed link looks something like this: https://www.youtube.com/embed/VIDEOID, not https://www.youtube.com/VIDEOID.
+- **"Why is my video embed not working?"** Make sure you're using the embed link and not the normal link. YouTube's embed link looks something like this: https://www.youtube.com/embed/VIDEOID.
 - **Why is the program being flagged as a virus?** It's unfortunately [common](https://medium.com/@markhank/how-to-stop-your-python-programs-being-seen-as-malware-bfd7eb407a7) for EXE files created from python files to be false positives. I'm attempting to get it whitelisted, but might not have contacted the company who owns your virus program yet.
 
 

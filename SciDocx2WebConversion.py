@@ -3,7 +3,7 @@ Convert scientific papers in DOCX format to HTML. See this project's GitHub page
 
 This is a module that is called by SciDocx2WebUI. It handles all of the actual conversion functions.
 
-Documentation last updated: 2023.05.14\n
+Documentation last updated: 2023.05.16\n
 Author: Tim Reichert\n
 Version: 1.0 (first public release)
 

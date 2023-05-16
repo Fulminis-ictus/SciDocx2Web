@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SciDocx2WebConversion &mdash; SciDocx2Web 1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SciDocx2Web
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SciDocx2Web</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">SciDocx2WebConversion</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for SciDocx2WebConversion</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Convert scientific papers in DOCX format to HTML. See this project&#39;s GitHub page for more info: https://github.com/Fulminis-ictus/SciDocx2Web</span>
+
+<span class="sd">This is a module that is called by SciDocx2WebUI. It handles all of the actual conversion functions.</span>
+
+<span class="sd">Documentation last updated: 2023.05.16\n</span>
+<span class="sd">Author: Tim Reichert\n</span>
+<span class="sd">Version: 1.0 (first public release)</span>
+
+<span class="sd">Uses and is dependent on Mammoth: https://github.com/mwilliamson/python-mammoth\n</span>
+<span class="sd">Makes use of dwasyl&#39;s added page break detection functionailty: https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1">### IMPORTS ###</span>
+<span class="c1"># Extraction and Conversion modules</span>
+<span class="kn">import</span> <span class="nn">re</span> <span class="c1"># RegEx</span>
+<span class="kn">from</span> <span class="nn">lxml</span> <span class="kn">import</span> <span class="n">etree</span> <span class="c1"># XML and XPath</span>
+<span class="kn">from</span> <span class="nn">html</span> <span class="kn">import</span> <span class="n">unescape</span> <span class="c1"># Replace HTML entities with their actual symbols</span>
+<span class="kn">from</span> <span class="nn">html</span> <span class="kn">import</span> <span class="n">escape</span> <span class="c1"># Re-add escape characters in code inside &lt;code&gt; tags</span>
+
+<span class="c1"># GUI</span>
+<span class="kn">from</span> <span class="nn">tkinter</span> <span class="kn">import</span> <span class="n">messagebox</span>
+
+
+<span class="c1">### MAIN CODE ###</span>
+<span class="c1">## STYLE MAP</span>
+<div class="viewcode-block" id="style_map_func"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.style_map_func">[docs]</a><span class="k">def</span> <span class="nf">style_map_func</span><span class="p">(</span><span class="n">custom_style_map</span><span class="p">,</span> <span class="n">headings1</span><span class="p">,</span> <span class="n">headings2</span><span class="p">,</span> <span class="n">headings3</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">videos</span><span class="p">,</span> <span class="n">audio</span><span class="p">,</span> <span class="n">media</span><span class="p">,</span> <span class="n">blockquotes</span><span class="p">,</span> <span class="n">tableCaptions</span><span class="p">,</span> <span class="n">bibliography</span><span class="p">,</span> <span class="n">ignorePNum</span><span class="p">,</span> <span class="n">paragraphNumberCheck</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">addStyleMap</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Generates a style map based on the format template name input fields. Empty input fields are ignored. The style map detects format templates applied to text and encloses them with an html element. For more information see: https://github.com/mwilliamson/python-mammoth#custom-style-map</span>
+<span class="sd">    </span>
+<span class="sd">    Headings1 -&gt; h1:fresh\n</span>
+<span class="sd">    Headings2 -&gt; h2:fresh\n</span>
+<span class="sd">    Headings3 -&gt; h3:fresh\n</span>
+<span class="sd">    Image -&gt; img.insertimage:fresh\n</span>
+<span class="sd">    Video -&gt; iframe.insertvideo:fresh\n</span>
+<span class="sd">    Audio -&gt; audio.insertaudio:fresh\n</span>
+<span class="sd">    Media -&gt; p.mediacaption:fresh\n</span>
+<span class="sd">    Blockquotes -&gt; blockquote:fresh\n</span>
+<span class="sd">    Table Captions -&gt; caption:fresh\n</span>
+<span class="sd">    Bibliography -&gt; p.bibliography:fresh\n</span>
+<span class="sd">    Ignore Paragraph Numbering -&gt; p.ignorePNum:fresh\n</span>
+<span class="sd">    Code -&gt; code&#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">headings1</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;p[style-name=&#39;</span><span class="si">{</span><span class="n">headings1</span><span class="si">}</span><span class="s2">&#39;] =&gt; h1:fresh&quot;</span>
+    <span class="k">if</span> <span class="n">headings2</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p[style-name=&#39;</span><span class="si">{</span><span class="n">headings2</span><span class="si">}</span><span class="s2">&#39;] =&gt; h2:fresh&quot;</span>
+    <span class="k">if</span> <span class="n">headings3</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p[style-name=&#39;</span><span class="si">{</span><span class="n">headings3</span><span class="si">}</span><span class="s2">&#39;] =&gt; h3:fresh&quot;</span>
+    <span class="k">if</span> <span class="n">images</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p[style-name=&#39;</span><span class="si">{</span><span class="n">images</span><span class="si">}</span><span class="s2">&#39;] =&gt; img.insertimage:fresh&quot;</span>
+    <span class="k">if</span> <span class="n">videos</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p[style-name=&#39;</span><span class="si">{</span><span class="n">videos</span><span class="si">}</span><span class="s2">&#39;] =&gt; iframe.insertvideo:fresh&quot;</span>
+    <span class="k">if</span> <span class="n">audio</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p[style-name=&#39;</span><span class="si">{</span><span class="n">audio</span><span class="si">}</span><span class="s2">&#39;] =&gt; audio.insertaudio:fresh&quot;</span>
+    <span class="k">if</span> <span class="n">media</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p[style-name=&#39;</span><span class="si">{</span><span class="n">media</span><span class="si">}</span><span class="s2">&#39;] =&gt; p.mediacaption:fresh&quot;</span>
+    <span class="k">if</span> <span class="n">blockquotes</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p[style-name=&#39;</span><span class="si">{</span><span class="n">blockquotes</span><span class="si">}</span><span class="s2">&#39;] =&gt; blockquote:fresh&quot;</span>
+    <span class="k">if</span> <span class="n">tableCaptions</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p[style-name=&#39;</span><span class="si">{</span><span class="n">tableCaptions</span><span class="si">}</span><span class="s2">&#39;] =&gt; caption:fresh&quot;</span>
+    <span class="k">if</span> <span class="n">bibliography</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p[style-name=&#39;</span><span class="si">{</span><span class="n">bibliography</span><span class="si">}</span><span class="s2">&#39;] =&gt; p.bibliography:fresh&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ignorePNum</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">paragraphNumberCheck</span><span class="p">):</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p[style-name=&#39;</span><span class="si">{</span><span class="n">ignorePNum</span><span class="si">}</span><span class="s2">&#39;] =&gt; p.ignorePNum:fresh&quot;</span>
+    <span class="k">if</span> <span class="n">code</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">p[style-name=&#39;</span><span class="si">{</span><span class="n">code</span><span class="si">}</span><span class="s2">&#39;] =&gt; code:fresh&quot;</span>
+    <span class="k">if</span> <span class="n">addStyleMap</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">custom_style_map</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">addStyleMap</span>
+
+    <span class="k">return</span> <span class="n">custom_style_map</span></div>
+
+<span class="c1">## IMPORT INPUT FILE</span>
+<div class="viewcode-block" id="enclose_body"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.enclose_body">[docs]</a><span class="k">def</span> <span class="nf">enclose_body</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">bodyCheckVar</span><span class="p">,</span> <span class="n">pageTitleEntryText</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Encloses the imported file with &lt;body&gt; tags to make it navigable with xpath.</span>
+
+<span class="sd">    If &quot;Only export the body?&quot; is unchecked:\n</span>
+<span class="sd">    Adds &lt;html&gt;, &lt;head&gt; and &lt;title&gt; elements. Also sets the charset to UTF-8 and adds the page title if the &quot;Page title:&quot; field isn&#39;t empty.</span>
+<span class="sd">    </span>
+<span class="sd">    Additionally, the grid container and main grid &lt;div&gt; tags are inserted and new page markers are unescaped.&#39;&#39;&#39;</span>
+
+    <span class="c1"># &quot;Only export the body?&quot; is checked</span>
+    <span class="k">if</span> <span class="n">bodyCheckVar</span><span class="p">:</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="s1">&#39;&lt;body&gt;&lt;div class=&quot;gridContainer&quot;&gt;&lt;div class=&quot;mainGrid&quot;&gt;&#39;</span> <span class="o">+</span> <span class="nb">input</span> <span class="o">+</span> <span class="s1">&#39;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&#39;</span>
+
+    <span class="c1"># &quot;Only export the body?&quot; is unchecked and the page title field isn&#39;t empty</span>
+    <span class="k">elif</span> <span class="n">pageTitleEntryText</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&lt;html&gt;&lt;head&gt;&lt;title&gt;</span><span class="si">{</span><span class="n">pageTitleEntryText</span><span class="si">}</span><span class="s1">&lt;/title&gt;&lt;meta charset=</span><span class="se">\&quot;</span><span class="s1">UTF-8</span><span class="se">\&quot;</span><span class="s1">&gt;&lt;/meta&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;gridContainer&quot;&gt;&lt;div class=&quot;mainGrid&quot;&gt;&#39;</span> <span class="o">+</span> <span class="nb">input</span> <span class="o">+</span> <span class="s1">&#39;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;&#39;</span>
+
+    <span class="c1"># &quot;Only export the body?&quot; is unchecked and the page title field is empty</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&lt;html&gt;&lt;head&gt;&lt;meta charset=</span><span class="se">\&quot;</span><span class="s1">UTF-8</span><span class="se">\&quot;</span><span class="s1">&gt;&lt;/meta&gt;&lt;/head&gt;&lt;body&gt;&lt;div class=&quot;gridContainer&quot;&gt;&lt;div class=&quot;mainGrid&quot;&gt;&#39;</span> <span class="o">+</span> <span class="nb">input</span> <span class="o">+</span> <span class="s1">&#39;&lt;/div&gt;&lt;/div&gt;&lt;/body&gt;&lt;/html&gt;&#39;</span>
+
+    <span class="c1"># unescape new page markers</span>
+    <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&amp;lt;sub class=&amp;quot;pagenumber&amp;quot;&amp;gt;NEW_PAGE_BEGINNING!&amp;lt;/sub&amp;gt;&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;&lt;sub class=&quot;pagenumber&quot;&gt;NEW_PAGE_BEGINNING!&lt;/sub&gt;&#39;</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">)</span>
+
+    <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<span class="c1">## FOOTNOTES</span>
+<div class="viewcode-block" id="create_footnotes_list"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.create_footnotes_list">[docs]</a><span class="k">def</span> <span class="nf">create_footnotes_list</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="n">abbreviateFootnotesNumber</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Compiles a list of footnotes. Iterates over all &lt;li&gt; elements in the footnote list created by mammoth and saves their contents to a python list.</span>
+<span class="sd">    </span>
+<span class="sd">    If footnotes are abbreviated:\n</span>
+<span class="sd">    Get footnote text without HTML tags to prevent tags that are never closed due to the abbreviation process.</span>
+<span class="sd">    </span>
+<span class="sd">    Else:\n</span>
+<span class="sd">    Get the footnote text with all HTML tags.&#39;&#39;&#39;</span>
+
+    <span class="n">footnotes</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">ol</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//li[@id=&quot;footnote-1&quot;]/..&#39;</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">li</span> <span class="ow">in</span> <span class="n">ol</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">li</span><span class="p">:</span>
+                <span class="c1"># Get footnote text without HTML tags</span>
+                <span class="k">if</span> <span class="n">abbreviateFootnotesNumber</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                    <span class="n">footnoteText</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">itertext</span><span class="p">())</span>
+                    <span class="n">footnoteText</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39; ↑&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">footnoteText</span><span class="p">)</span>
+                    <span class="n">footnotes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">footnoteText</span><span class="p">)</span>
+                <span class="c1"># Get footnote text with HTML tags</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">footnoteText</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+                    <span class="n">footnoteText</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(&lt;p&gt;)(.*?)(&lt;a href=&quot;#footnote-ref)(.*)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\2&#39;</span><span class="p">,</span> <span class="n">footnoteText</span><span class="p">)</span>
+                    <span class="n">footnotes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">footnoteText</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">footnotes</span></div>
+
+<div class="viewcode-block" id="abbreviate_footnotes"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.abbreviate_footnotes">[docs]</a><span class="k">def</span> <span class="nf">abbreviate_footnotes</span><span class="p">(</span><span class="n">footnotes</span><span class="p">,</span> <span class="n">abbreviateFootnotesNumber</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Abbreviates footnotes according to the number in the &quot;Abbreviate tooltips after how many symbols?&quot; input field and adds &quot;[...]&quot; to the end of abbreviated footnotes.</span>
+
+<span class="sd">    If the input field is empty:\n</span>
+<span class="sd">    Skips this function.</span>
+
+<span class="sd">    If something other than an integer is input:\n</span>
+<span class="sd">    Tooltip abbreviation is skipped with an error message indicating that the abbreviation was unsuccessful but the rest of the conversion process continues as normal.&#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">abbreviateFootnotesNumber</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">abbreviateFootnotesNumber</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+            <span class="n">abbreviateFootnotesNumber</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">abbreviateFootnotesNumber</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">footnotes</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">footnotes</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">abbreviateFootnotesNumber</span><span class="p">:</span>
+                    <span class="n">footnotes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">footnotes</span><span class="p">[</span><span class="n">i</span><span class="p">][:</span><span class="n">abbreviateFootnotesNumber</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;[...]&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">messagebox</span><span class="o">.</span><span class="n">showerror</span><span class="p">(</span><span class="s1">&#39;Tooltip abbreviation unsuccessful&#39;</span><span class="p">,</span> <span class="s1">&#39;The file conversion will continue but the tooltip abbreviation was unsuccessful. The tooltip abbreviation input field (&quot;Abbreviate tooltips after how many symbols?&quot;) only accepts integers.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">footnotes</span></div>
+
+<div class="viewcode-block" id="add_wbr_footnotes"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.add_wbr_footnotes">[docs]</a><span class="k">def</span> <span class="nf">add_wbr_footnotes</span><span class="p">(</span><span class="n">footnotesAbbr</span><span class="p">,</span> <span class="n">abbreviateFootnotesNumber</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Finds all slashes within footnotes and adds &lt;wbr&gt; tags after them to ensure that links automatically receive a line break when necessary. </span>
+<span class="sd">    </span>
+<span class="sd">    If footnotes are abbreviated:\n</span>
+<span class="sd">    Apply to all text. Since all HTML tags have been removed in a previous step there&#39;s no need to worry about HTML tags being affected.</span>
+<span class="sd">    </span>
+<span class="sd">    Else:\n</span>
+<span class="sd">    Look for text in &lt;a&gt; tags specifically so that other HTML tags aren&#39;t affected.&#39;&#39;&#39;</span>
+
+    <span class="c1"># insert &lt;wbr&gt; throughout the whole text</span>
+    <span class="k">if</span> <span class="n">abbreviateFootnotesNumber</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">footnotesAbbr</span><span class="p">)):</span>
+            <span class="n">footnotesAbbr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;/&lt;wbr&gt;&#39;</span><span class="p">,</span> <span class="n">footnotesAbbr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="c1"># insert &lt;wbr&gt; only inside the &lt;a&gt; elements</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">footnotesAbbr</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(&lt;a.*?&gt;)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">footnotesAbbr</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span> <span class="c1"># check if a link exists in the footnote before proceeding.</span>
+                <span class="n">replace</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(.*?)(&lt;a.*?&gt;)(.*?)(&lt;/a&gt;)(.*)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\3&#39;</span><span class="p">,</span> <span class="n">footnotesAbbr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">replace</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;/&lt;wbr&gt;&#39;</span><span class="p">,</span> <span class="n">replace</span><span class="p">)</span>
+                <span class="n">footnotesAbbr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(&lt;a.*?&gt;)(.*?)(&lt;/a&gt;)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span> <span class="o">+</span> <span class="n">replace</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;\3&#39;</span><span class="p">,</span> <span class="n">footnotesAbbr</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">footnotesAbbr</span></div>
+
+<div class="viewcode-block" id="insert_footnotes"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.insert_footnotes">[docs]</a><span class="k">def</span> <span class="nf">insert_footnotes</span><span class="p">(</span><span class="n">tooltipsCheckVar</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">,</span> <span class="n">footnotesAbbr</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;If &quot;Add tooltips to footnotes?&quot; is checked:\n</span>
+<span class="sd">    Finds &lt;sup&gt; tags that contain links with an ID starting with &quot;footnote-ref&quot;, which denotes footnote numbers in the main text. It then creates a tooltip &lt;span&gt; and appends it to the end of the found &lt;sup&gt; tags. The whole element, including the &lt;sup&gt; element and tooltip &lt;span&gt; element, is then enclosed with a tooltippop &lt;span&gt; element. Structure derived from: https://www.w3schools.com/howto/howto_css_tooltip.asp</span>
+<span class="sd">    </span>
+<span class="sd">    Also adds &quot;role&quot; and &quot;aria-attribute&quot; attributes for accessibility.</span>
+<span class="sd">    </span>
+<span class="sd">    Conversion example: &lt;sup&gt;&lt;a href=&quot;#footnote-N&quot; id=&quot;footnote-ref-N&quot;&gt;[N]&lt;/a&gt;&lt;/sup&gt; -&gt;\n</span>
+<span class="sd">    &lt;span class=&quot;tooltippop&quot; aria-describedby=&quot;tooltip-N&quot;&gt;&lt;sup&gt;&lt;a href=&quot;#footnote-N&quot; id=&quot;footnote-ref-N&quot;&gt;[N]&lt;/a&gt;&lt;span role=&quot;tooltip&quot; id=&quot;tooltip-N&quot;&gt;Footnote content.&lt;/span&gt;&lt;/sup&gt;&lt;/span&gt;&#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">tooltipsCheckVar</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//sup/a[contains(@id, &quot;footnote-ref&quot;)]/..&#39;</span><span class="p">):</span> 
+            <span class="c1"># create tooltip and tooltip text &lt;span&gt;s</span>
+            <span class="n">tooltiptextSpan</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;span&#39;</span><span class="p">)</span>
+            <span class="n">tooltiptextSpan</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;tooltip&#39;</span>
+            <span class="n">tooltiptextSpan</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;tooltip-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">tooltipSpan</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;span&#39;</span><span class="p">)</span>
+            <span class="n">tooltipSpan</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;tooltippop&#39;</span>
+            <span class="n">tooltipSpan</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;aria-describedby&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;tooltip-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># insert footnote text and append tooltiptext &lt;span&gt; to end of current footnote sections </span>
+            <span class="n">tooltiptextSpan</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">footnotesAbbr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tooltiptextSpan</span><span class="p">)</span>
+
+            <span class="c1"># enclose footnote sections (including the tooltiptext &lt;span&gt;s) with tooltip &lt;span&gt;s</span>
+            <span class="n">tooltipSpan</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tooltipSpan</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1">#print(etree.tostring(bodyxml))</span>
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="adjust_footnotes"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.adjust_footnotes">[docs]</a><span class="k">def</span> <span class="nf">adjust_footnotes</span><span class="p">(</span><span class="n">tooltipsCheckVar</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;If &quot;Add tooltips to footnotes?&quot; is checked:\n</span>
+<span class="sd">    Removes the &lt;sup&gt; elements and creates new ones within the &lt;a&gt; tags. Also removes the square brackets around the footnote numbers, and moves the numbers from the &lt;a&gt; tags into the &lt;sup&gt; tags.\n</span>
+<span class="sd">    This whole process ensures that only the footnote numbers, not the footnote text within the tooltips, is enclosed by the &lt;sup&gt; elements.</span>
+
+<span class="sd">    Example: &lt;sup&gt;&lt;span class=&quot;tooltip&quot;&gt;&lt;a href=&quot;#footnote-N&quot; id=&quot;footnote-ref-N&quot;&gt;[N]&lt;/a&gt;&lt;span class=&quot;tooltiptext&quot;&gt;Footnote content.&lt;/span&gt;&lt;/span&gt;&lt;/sup&gt; -&gt;\n</span>
+<span class="sd">    &lt;span class=&quot;tooltippop&quot; aria-describedby=&quot;tooltip-N&quot;&gt;&lt;a href=&quot;#footnote-N&quot; id=&quot;footnote-ref-N&quot;&gt;&lt;sup&gt;N&lt;/sup&gt;&lt;/a&gt;&lt;span role=&quot;tooltip&quot; id=&quot;tooltip-N&quot;&gt;Footnote content.&lt;/span&gt;&lt;/span&gt;</span>
+<span class="sd">    </span>
+<span class="sd">    Else:\n</span>
+<span class="sd">    Only the square brackets around the footnote numbers are removed.&#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">tooltipsCheckVar</span><span class="p">:</span>
+        <span class="c1"># remove &lt;sup&gt; elements</span>
+        <span class="k">while</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//sup/span[contains(@class, &quot;tooltippop&quot;)]/..&#39;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//sup/span[contains(@class, &quot;tooltippop&quot;)]/..&#39;</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">addnext</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">getparent</span><span class="p">()</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        
+        <span class="c1"># add &lt;sup&gt; elements containing the footnote numbers at the right position</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//a[contains(@id, &quot;footnote-ref&quot;)]&#39;</span><span class="p">):</span>
+            <span class="c1"># transform text inside &lt;a&gt; from [N] to N, give it an aria-label, insert it into the &lt;sup&gt; elements, remove it from the &lt;a&gt; element</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\[)(.*)(\])&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\2&#39;</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Link to footnote list at the bottom of the document.&#39;</span>
+            <span class="n">sup</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;sup&#39;</span><span class="p">)</span>
+            <span class="n">sup</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+            <span class="c1"># move &lt;sup&gt; elements to the right positions</span>
+            <span class="n">sup</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sup</span><span class="p">)</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//a[contains(@id, &quot;footnote-ref&quot;)]&#39;</span><span class="p">):</span>
+            <span class="c1"># transform text from [N] to N</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\[)(.*)(\])&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\2&#39;</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="footnotes_bottom_adjust"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.footnotes_bottom_adjust">[docs]</a><span class="k">def</span> <span class="nf">footnotes_bottom_adjust</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="n">commentBottomFootnotes</span><span class="p">,</span> <span class="n">breakElement</span><span class="p">,</span> <span class="n">hrElement</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;If a footnote list at the bottom of the main text exists:</span>
+
+<span class="sd">    Adds elements before the footnote list at the bottom to separate it from the rest: &lt;br/&gt;, &lt;hr/&gt; and the comment &quot;Bottom footnotes&quot;.</span>
+<span class="sd">    </span>
+<span class="sd">    Also adds &quot;aria-label&quot; attributes that describe the links at the end of the footntoes as links back to the footnotes in the main text.&#39;&#39;&#39;</span>
+
+    <span class="n">bottomFootnotes</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;.//li[@id=&quot;footnote-1&quot;]/..&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">bottomFootnotes</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># add seperators</span>
+        <span class="n">bottomFootnotes</span><span class="o">.</span><span class="n">addprevious</span><span class="p">(</span><span class="n">commentBottomFootnotes</span><span class="p">)</span>
+        <span class="n">bottomFootnotes</span><span class="o">.</span><span class="n">addprevious</span><span class="p">(</span><span class="n">breakElement</span><span class="p">)</span>
+        <span class="n">bottomFootnotes</span><span class="o">.</span><span class="n">addprevious</span><span class="p">(</span><span class="n">hrElement</span><span class="p">)</span>
+        <span class="n">bottomFootnotes</span><span class="o">.</span><span class="n">addprevious</span><span class="p">(</span><span class="n">breakElement</span><span class="p">)</span>
+        
+        <span class="c1"># add aria-label</span>
+        <span class="k">for</span> <span class="n">li</span> <span class="ow">in</span> <span class="n">bottomFootnotes</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">li</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//a[contains(@href, &quot;footnote-ref&quot;)]&#39;</span><span class="p">):</span>
+                    <span class="n">a</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;aria-label&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Link back to footnote in main text.&#39;</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<span class="c1">## TEXT</span>
+<div class="viewcode-block" id="add_wbr_text"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.add_wbr_text">[docs]</a><span class="k">def</span> <span class="nf">add_wbr_text</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Finds all slashes in links within the main text and adds &lt;wbr&gt; tags to ensure that links automatically receive line breaks after slashes.&#39;&#39;&#39;</span>
+
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//a&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">text</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;/&lt;wbr&gt;&#39;</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="add_Head_IDs"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.add_Head_IDs">[docs]</a><span class="k">def</span> <span class="nf">add_Head_IDs</span><span class="p">(</span><span class="n">headingsIDVar</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;If &quot;Add IDs to headings?&quot; is checked:\n</span>
+<span class="sd">    Adds IDs to all found &lt;h1&gt; elements following the form &quot;headingN&quot; where &quot;N&quot; is an integer counting upwards.</span>
+<span class="sd">    </span>
+<span class="sd">    Example: &lt;h1 id=&quot;heading1&quot;&gt;First heading&lt;/h1&gt;, &lt;h1 id=&quot;heading2&quot;&gt;Second heading&lt;/h1&gt;, &lt;h2 id=&quot;heading3&quot;&gt;Subheading of second heading&lt;/h2&gt; etc.&#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">headingsIDVar</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//h1|//h2|//h3&#39;</span><span class="p">):</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;heading&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="remove_toc_and_head"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.remove_toc_and_head">[docs]</a><span class="k">def</span> <span class="nf">remove_toc_and_head</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Removes Word&#39;s &quot;Table Of Contents&quot; and &quot;_heading&quot; IDs. Both of those consist of non-closed &quot;a&quot;-tags that can lead to display errors or mess with the navigation.&#39;&#39;&#39;</span>
+
+    <span class="n">findToc</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_Toc&quot;)]/..&#39;</span><span class="p">)</span>
+
+    <span class="c1"># remove Toc</span>
+    <span class="k">if</span> <span class="n">findToc</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">findToc</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                <span class="n">tail</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">tail</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">tail</span>
+
+    <span class="n">findHead</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_heading&quot;)]/..&#39;</span><span class="p">)</span>
+
+    <span class="c1"># remove _heading</span>
+    <span class="k">if</span> <span class="n">findHead</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">findHead</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                <span class="n">tail</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">tail</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">tail</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="create_navigation"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.create_navigation">[docs]</a><span class="k">def</span> <span class="nf">create_navigation</span><span class="p">(</span><span class="n">navigationVar</span><span class="p">,</span> <span class="n">navigationTypeVar</span><span class="p">,</span> <span class="n">findH1</span><span class="p">,</span> <span class="n">navigationElement</span><span class="p">,</span> <span class="n">commentNavigation</span><span class="p">,</span> <span class="n">h1Navigation</span><span class="p">,</span> <span class="n">navGridDiv</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;If &quot;Create navigation?&quot; is checked:\n</span>
+<span class="sd">    Creates a navigation by compiling a list of all &lt;h1&gt;, &lt;h2&gt; and &lt;h3&gt; elements. Each navigation item is a paragraph or a button, depending on which radio button option is activated in the GUI. Adds links with href attributes that link each navigation item to their respective heading.</span>
+<span class="sd">    </span>
+<span class="sd">    Example: &lt;button&gt;&lt;a href=&quot;#heading1&quot;&gt;Navigation to first heading&lt;/a&gt;&lt;/button&gt;</span>
+
+<span class="sd">    When compiling the headings text, the &lt;h1&gt;, &lt;h2&gt; and &lt;h3&gt; tags and new page markers are removed from the navigation.</span>
+<span class="sd">    </span>
+<span class="sd">    Encloses everything with a &lt;div&gt; with the class &quot;navGrid&quot;.&#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">navigationVar</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">findH1</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">findH1</span><span class="p">:</span>
+                <span class="c1"># create &lt;p&gt; or &lt;button&gt;</span>
+                <span class="k">if</span> <span class="n">navigationTypeVar</span> <span class="o">==</span> <span class="s1">&#39;paragraph&#39;</span><span class="p">:</span>
+                    <span class="n">elementPorB</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;p&#39;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">elementPorB</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;button&#39;</span><span class="p">)</span>
+                <span class="c1"># create link</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">elementPorB</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;href&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;#heading&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="c1"># remove &lt;h1&gt;, &lt;h2&gt; and &lt;h3&gt; tags, as well as new page markers</span>
+                <span class="n">headingsText</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+                <span class="n">headingsText</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(&lt;h1 .*?&gt;)(.*?)(&lt;/h1&gt;)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\2&#39;</span><span class="p">,</span> <span class="n">headingsText</span><span class="p">)</span>
+                <span class="n">headingsText</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(&lt;h2 .*?&gt;)(.*?)(&lt;/h2&gt;)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\2&#39;</span><span class="p">,</span> <span class="n">headingsText</span><span class="p">)</span>
+                <span class="n">headingsText</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(&lt;h3 .*?&gt;)(.*?)(&lt;/h3&gt;)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\2&#39;</span><span class="p">,</span> <span class="n">headingsText</span><span class="p">)</span>
+                <span class="n">headingsText</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(&lt;sub class=&quot;pagenumber&quot;&gt;NEW_PAGE_BEGINNING!&lt;/sub&gt;)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">headingsText</span><span class="p">)</span>
+                <span class="n">a</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">headingsText</span>
+                <span class="n">navigationElement</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elementPorB</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            
+            <span class="c1"># create navigation grid</span>
+            <span class="n">navGridDiv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">commentNavigation</span><span class="p">)</span>
+            <span class="n">navGridDiv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h1Navigation</span><span class="p">)</span>
+            <span class="n">navGridDiv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">navigationElement</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">navGridDiv</span></div>
+
+<div class="viewcode-block" id="add_cite"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.add_cite">[docs]</a><span class="k">def</span> <span class="nf">add_cite</span><span class="p">(</span><span class="n">tooltiptextPath</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">,</span> <span class="n">footnotes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Adds a cite attribute to &lt;blockquote&gt; elements. Inserts the footnote text as the cite value by using the footnote number at the end of the blockquote (minus one since the list starts counting at 0 but the footnotes start counting at 1) as the index of the footnote list.&#39;&#39;&#39;</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//blockquote&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="n">tooltiptextPath</span><span class="p">):</span>
+            <span class="n">footnotenumber</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="n">tooltiptextPath</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="n">citetext</span> <span class="o">=</span> <span class="n">footnotes</span><span class="p">[</span><span class="n">footnotenumber</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;cite&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">citetext</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="embed_images"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.embed_images">[docs]</a><span class="k">def</span> <span class="nf">embed_images</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Embeds image links that have the &quot;insertimage&quot; attribute. The text marked as an image should be a link (not a hyperlink!), which is then inserted into the &quot;src&quot; attribute of the image.</span>
+<span class="sd">    </span>
+<span class="sd">    Else if the height and width input is empty:\n</span>
+<span class="sd">    Don&#39;t insert any width and height parameters.</span>
+<span class="sd">    </span>
+<span class="sd">    Else:\n</span>
+<span class="sd">    Don&#39;t insert any width and height parameters and display an error.&#39;&#39;&#39;</span>
+
+    <span class="c1"># get width and height</span>
+    <span class="n">splitDimensions</span> <span class="o">=</span> <span class="n">dimensions</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+    <span class="c1"># correct input </span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">splitDimensions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">splitDimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">and</span> <span class="n">splitDimensions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">splitDimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">splitDimensions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># input field is empty</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">splitDimensions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">splitDimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># faulty input</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">messagebox</span><span class="o">.</span><span class="n">showinfo</span><span class="p">(</span><span class="s1">&#39;No image dimensions used&#39;</span><span class="p">,</span> <span class="s1">&#39;Faulty input in the audio dimensions input field. No &quot;width&quot; and &quot;height&quot; parameters have been inserted. Make sure the input is two integers seperated by a comma.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># insert src and width and height</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//img[@class=&quot;insertimage&quot;]&#39;</span><span class="p">):</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;src&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">text</span>
+        <span class="k">if</span> <span class="n">width</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="k">if</span> <span class="n">height</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="embed_videos"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.embed_videos">[docs]</a><span class="k">def</span> <span class="nf">embed_videos</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Embeds video links that have the &quot;insertvideo&quot; attribute. The text marked as a video should be a link (not a hyperlink!), which is then inserted into the &quot;src&quot; attribute of the video.</span>
+<span class="sd">    </span>
+<span class="sd">    If the height and width input consists of two numbers split by a comma:\n </span>
+<span class="sd">    Use these two numbers as height and width of the iframe.</span>
+
+<span class="sd">    Else if the height and width input is empty:\n</span>
+<span class="sd">    Don&#39;t insert any width and height parameters.</span>
+<span class="sd">    </span>
+<span class="sd">    Else:\n</span>
+<span class="sd">    Don&#39;t insert any width and height parameters and display an error.&#39;&#39;&#39;</span>
+
+    <span class="c1"># get width and height</span>
+    <span class="n">splitDimensions</span> <span class="o">=</span> <span class="n">dimensions</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+
+    <span class="c1"># correct input </span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">splitDimensions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">splitDimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">and</span> <span class="n">splitDimensions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">splitDimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">splitDimensions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># input field is empty</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">splitDimensions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">splitDimensions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># faulty input</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">messagebox</span><span class="o">.</span><span class="n">showinfo</span><span class="p">(</span><span class="s1">&#39;No video dimensions used&#39;</span><span class="p">,</span> <span class="s1">&#39;Faulty input in the video dimensions input field. No &quot;width&quot; and &quot;height&quot; parameters have been inserted. Make sure the input is two integers seperated by a comma.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># insert src and width and height</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//iframe[@class=&quot;insertvideo&quot;]&#39;</span><span class="p">):</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;src&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">text</span>
+        <span class="k">if</span> <span class="n">width</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="k">if</span> <span class="n">height</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">height</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="embed_audio"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.embed_audio">[docs]</a><span class="k">def</span> <span class="nf">embed_audio</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Embeds audio links that have the &quot;insertaudio&quot; attribute. The text marked as audio should be a link (not a hyperlink!), which is then inserted into the &quot;src&quot; attribute of the &lt;source&gt; element inside the &lt;audio&gt; element.&#39;&#39;&#39;</span>
+
+    <span class="c1"># create &lt;source&gt; and insert src</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//audio[@class=&quot;insertaudio&quot;]&#39;</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;source&#39;</span><span class="p">)</span>
+        <span class="n">source</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;src&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;controls&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;True&#39;</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="file_insertion_message"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.file_insertion_message">[docs]</a><span class="k">def</span> <span class="nf">file_insertion_message</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Adds the comment &quot;Insert Media&quot; before &lt;p&gt; elements that have the media caption class to alert the user to the fact that they might need to manually insert media at that line.&#39;&#39;&#39;</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//p[contains(@class, &quot;mediacaption&quot;)]&#39;</span><span class="p">):</span>
+        <span class="n">commentMedia</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Comment</span><span class="p">(</span><span class="s1">&#39; Insert Media &#39;</span><span class="p">)</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">addprevious</span><span class="p">(</span><span class="n">commentMedia</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="move_table_caption"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.move_table_caption">[docs]</a><span class="k">def</span> <span class="nf">move_table_caption</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Moves the &lt;caption&gt; elements to the beginning of the &lt;table&gt; elements for semantic reasons.&#39;&#39;&#39;</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//caption&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">getprevious</span><span class="p">()</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">&#39;table&#39;</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">getprevious</span><span class="p">()</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="page_breaks"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.page_breaks">[docs]</a><span class="k">def</span> <span class="nf">page_breaks</span><span class="p">(</span><span class="n">pageNumberCheckVar</span><span class="p">,</span> <span class="n">pageNumberStartCheckVar</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">,</span> <span class="n">bodyCheckVar</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;If &quot;Insert page numbers?&quot; is checked\n</span>
+<span class="sd">    Inserts a &lt;sub class=&quot;pagenumber&quot;&gt; element at the very beginning of the text (only page breaks are marked automatically, meaning the first page needs to receive an element manually). Finds all &lt;sub class=&quot;pagenumber&quot;&gt; elements and inserts a page number following the form {N} where N is an integer counting upwards. N is calculated as 2-pageNumberStart. If the page number start is set to 1 then the page number at the very top would receive the number 1. If the page number start is set to 2 then the page number at the very top would receive the number 0 etc. Page number indicators that would receive a number &lt;= 0 receive no text instead, which makes them invisible.</span>
+<span class="sd">    </span>
+<span class="sd">    Else:\n</span>
+<span class="sd">    Finds &lt;sub class=&quot;pagenumber&quot;&gt; tags that denote a new page beginning and deletes their content.&#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">pageNumberCheckVar</span> <span class="ow">and</span> <span class="n">pageNumberStartCheckVar</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="c1"># insert page number element at the very beginning (&lt;sub class=&quot;pagenumber&quot;&gt;&lt;/sub&gt;). Will receive text in next step</span>
+        <span class="n">pageSub</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;sub&#39;</span><span class="p">)</span>
+        <span class="n">pageSub</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;pagenumber&#39;</span>
+
+        <span class="k">if</span> <span class="n">bodyCheckVar</span><span class="p">:</span>
+            <span class="n">bodyxml</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pageSub</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bodyxml</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pageSub</span><span class="p">)</span>
+
+        <span class="c1"># insert page number into beginning of new page markers. Insert no text if </span>
+        <span class="k">if</span> <span class="n">pageNumberStartCheckVar</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">pageNumberStartCheckVar</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">pageNumber</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//sub[@class=&quot;pagenumber&quot;]&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">pageNumber</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pageNumber</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;{&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">messagebox</span><span class="o">.</span><span class="n">showerror</span><span class="p">(</span><span class="s1">&#39;Page number insertion unsuccessful&#39;</span><span class="p">,</span> <span class="s1">&#39;The file conversion will continue but the page number insertion was unsuccessful. The starting page number input field only accepts integers.&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">pageNumber</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//sub[@class=&quot;pagenumber&quot;]&#39;</span><span class="p">):</span>
+                <span class="n">pageNumber</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">pageNumber</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//sub[@class=&quot;pagenumber&quot;]&#39;</span><span class="p">):</span>
+                <span class="n">pageNumber</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="paragraph_numbering"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.paragraph_numbering">[docs]</a><span class="k">def</span> <span class="nf">paragraph_numbering</span><span class="p">(</span><span class="n">paragraphNumberCheckVar</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;If &quot;Number the paragraphs?&quot; is checked:\n</span>
+<span class="sd">    Adds numbers to the beginning of each paragraph and each blockquote following the form [N] where N is an integer counting upwards. Skips paragraphs that have the &quot;ignorePNum&quot;, &quot;mediacaption&quot; or &quot;bibliography&quot; classes.&#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">paragraphNumberCheckVar</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//div[@class=&quot;mainGrid&quot;]/p[not(@class=&quot;mediacaption&quot;) and not(@class=&quot;ignorePNum&quot;) and not(@class=&quot;bibliography&quot;)]|//blockquote&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;] &#39;</span> <span class="o">+</span> <span class="n">node</span><span class="o">.</span><span class="n">text</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;] &#39;</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="create_sections"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.create_sections">[docs]</a><span class="k">def</span> <span class="nf">create_sections</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;This code was planned to create sections based on chapters but it&#39;s not functional.&#39;&#39;&#39;</span>
+
+    <span class="c1"># find h1, h2 or h3 headings.</span>
+    <span class="c1"># insert everything between found heading and next heading into section.</span>
+
+    <span class="c1">#for heading in bodyxml.xpath(&#39;.//h1|.//h2|.//h3&#39;):</span>
+    <span class="c1">#    print(etree.tostring(heading))</span>
+
+    <span class="c1">#headings = bodyxml.findall(&quot;.//h1&quot;)</span>
+    <span class="n">findH1</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">&#39;.//h1&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">heading</span> <span class="ow">in</span> <span class="n">findH1</span><span class="p">:</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//&#39;</span> <span class="o">+</span> <span class="n">heading</span><span class="o">.</span><span class="n">tag</span> <span class="o">+</span> <span class="s1">&#39;[@id=&quot;&#39;</span> <span class="o">+</span> <span class="n">heading</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&quot;]/following-sibling::h1[1]/preceding-sibling::*&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+        <span class="n">elements</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+
+        <span class="n">section</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">&#39;section&#39;</span><span class="p">)</span>
+        <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//&#39;</span> <span class="o">+</span> <span class="n">heading</span><span class="o">.</span><span class="n">tag</span> <span class="o">+</span> <span class="s1">&#39;[@id=&quot;&#39;</span> <span class="o">+</span> <span class="n">heading</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;&quot;]&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">addprevious</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">:</span>
+            <span class="n">section</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">element</span><span class="p">)</span>
+        
+        <span class="c1">#print(bodyxml.getelementpath(heading))</span>
+    <span class="c1">#print(findH1)</span>
+    <span class="c1">#headings = bodyxml.xpath(&#39;.//h1/following-sibling::h1[1]/preceding-sibling::*&#39;)</span>
+    <span class="c1">#print(headings)</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+
+<span class="c1">## FINALISATION</span>
+<div class="viewcode-block" id="assemble_html"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.assemble_html">[docs]</a><span class="k">def</span> <span class="nf">assemble_html</span><span class="p">(</span><span class="n">navigationVar</span><span class="p">,</span> <span class="n">bodyCheckVar</span><span class="p">,</span> <span class="n">cssCheckVar</span><span class="p">,</span> <span class="n">cssXML</span><span class="p">,</span> <span class="n">navGridDiv</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">,</span> <span class="n">javascriptXML</span><span class="p">,</span> <span class="n">javascriptCheckVar</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Assembles the individual sections (navigation, css, body) and writes them to an html file.</span>
+<span class="sd">    </span>
+<span class="sd">    If &quot;Create navigation?&quot; is unchecked:\n</span>
+<span class="sd">    Skips navigation section.</span>
+<span class="sd">    </span>
+<span class="sd">    If &quot;Add suggested css?&quot; is unchecked:\n</span>
+<span class="sd">    Skips css section.</span>
+<span class="sd">    </span>
+<span class="sd">    If &quot;Only export the body?&quot; is unchecked:\n</span>
+<span class="sd">    &quot;&lt;!DOCTYPE html&gt;&quot; is added to the beginning to create a well formed html file. This is not necessary if only the body is exported since it&#39;s an incomplete html file without the &lt;head&gt; element.&#39;&#39;&#39;</span>
+
+    <span class="c1"># navigation</span>
+    <span class="k">if</span> <span class="n">navigationVar</span><span class="p">:</span> 
+        <span class="k">if</span> <span class="n">bodyCheckVar</span><span class="p">:</span>
+            <span class="n">bodyxml</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">navGridDiv</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bodyxml</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">navGridDiv</span><span class="p">)</span>
+
+    <span class="c1"># javascript</span>
+    <span class="k">if</span> <span class="n">javascriptCheckVar</span><span class="p">:</span>
+        <span class="n">bodyxml</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">javascriptXML</span><span class="p">)</span>
+
+    <span class="c1"># css</span>
+    <span class="k">if</span> <span class="n">cssCheckVar</span><span class="p">:</span>
+        <span class="n">bodyxml</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cssXML</span><span class="p">)</span>
+
+    <span class="c1"># doctype declaration</span>
+    <span class="k">if</span> <span class="n">bodyCheckVar</span><span class="p">:</span>
+        <span class="n">exportableBodyxml</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;unicode&#39;</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">exportableBodyxml</span> <span class="o">=</span> <span class="s2">&quot;&lt;!DOCTYPE html&gt;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">etree</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;unicode&#39;</span><span class="p">,</span> <span class="n">pretty_print</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">exportableBodyxml</span></div>
+
+<div class="viewcode-block" id="escape_unescape"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.escape_unescape">[docs]</a><span class="k">def</span> <span class="nf">escape_unescape</span><span class="p">(</span><span class="n">exportableBodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Unescapes the file to make sure HTML tags are applied properly instead of them being displayed as escaped HTML. Re-escapes HTML symbols that are marked as example code.&#39;&#39;&#39;</span>
+
+    <span class="c1"># unescape</span>
+    <span class="n">exportableBodyxml</span> <span class="o">=</span> <span class="n">unescape</span><span class="p">(</span><span class="n">exportableBodyxml</span><span class="p">)</span>
+
+    <span class="c1"># re-escape code</span>
+    <span class="k">def</span> <span class="nf">insertPreCode</span><span class="p">(</span><span class="n">match</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">r</span><span class="s1">&#39;&lt;code&gt;&#39;</span> <span class="o">+</span> <span class="n">escape</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;&lt;/code&gt;&#39;</span>
+    <span class="n">exportableBodyxml</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(&lt;code&gt;)(.*?)(&lt;/code&gt;)&#39;</span><span class="p">,</span> <span class="n">insertPreCode</span><span class="p">,</span> <span class="n">exportableBodyxml</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">exportableBodyxml</span></div>
+
+<div class="viewcode-block" id="write_html"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.write_html">[docs]</a><span class="k">def</span> <span class="nf">write_html</span><span class="p">(</span><span class="n">exportableBodyxml</span><span class="p">,</span> <span class="n">outputPath</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Write to file.&#39;&#39;&#39;</span>
+    
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outputPath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">exportableBodyxml</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Tim Reichert.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
