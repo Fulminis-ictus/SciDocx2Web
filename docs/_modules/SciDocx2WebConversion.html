@@ -169,6 +169,10 @@
 <span class="c1">## FOOTNOTES</span>
 <div class="viewcode-block" id="create_footnotes_list"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.create_footnotes_list">[docs]</a><span class="k">def</span> <span class="nf">create_footnotes_list</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="n">abbreviateFootnotesNumber</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;Compiles a list of footnotes. Iterates over all &lt;li&gt; elements in the footnote list created by mammoth and saves their contents to a python list.</span>
+
+<span class="sd">    There was one case where footnotes started counting at 0 instead of 1. This case has been accounted for by checking whether the list is empty after searching for list items with the ID &quot;footnote-1&quot;.</span>
+
+<span class="sd">    An empty footnote list is created if there are no footntoes.</span>
 <span class="sd">    </span>
 <span class="sd">    If footnotes are abbreviated:\n</span>
 <span class="sd">    Get footnote text without HTML tags to prevent tags that are never closed due to the abbreviation process.</span>
@@ -178,7 +182,12 @@
 
     <span class="n">footnotes</span> <span class="o">=</span> <span class="p">[]</span>
 
-    <span class="k">for</span> <span class="n">ol</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//li[@id=&quot;footnote-1&quot;]/..&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//li[@id=&quot;footnote-1&quot;]/..&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">[]:</span>
+        <span class="n">footnotePath</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//li[@id=&quot;footnote-0&quot;]/..&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">footnotePath</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//li[@id=&quot;footnote-1&quot;]/..&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ol</span> <span class="ow">in</span> <span class="n">footnotePath</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">li</span> <span class="ow">in</span> <span class="n">ol</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">li</span><span class="p">:</span>
                 <span class="c1"># Get footnote text without HTML tags</span>
@@ -357,28 +366,27 @@
 
     <span class="k">return</span> <span class="n">bodyxml</span></div>
 
-<div class="viewcode-block" id="remove_toc_and_head"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.remove_toc_and_head">[docs]</a><span class="k">def</span> <span class="nf">remove_toc_and_head</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;Removes Word&#39;s &quot;Table Of Contents&quot; and &quot;_heading&quot; IDs. Both of those consist of non-closed &quot;a&quot;-tags that can lead to display errors or mess with the navigation.&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="remove_word_lnks"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.remove_word_lnks">[docs]</a><span class="k">def</span> <span class="nf">remove_word_lnks</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Removes various links that word inserts into the document, including &quot;Table Of Contents&quot;, &quot;_heading&quot; and &quot;_Hlk&quot; link. They are interpreted as non-closed &quot;a&quot;-tags that can lead to display errors or mess with the navigation.&#39;&#39;&#39;</span>
 
-    <span class="n">findToc</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_Toc&quot;)]/..&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">findID</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">findID</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                    <span class="n">tail</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">tail</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">tail</span>
+        
+        <span class="k">return</span> <span class="n">bodyxml</span>
 
-    <span class="c1"># remove Toc</span>
-    <span class="k">if</span> <span class="n">findToc</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">findToc</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
-                <span class="n">tail</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">tail</span>
-                <span class="n">node</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-                <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">tail</span>
+    <span class="n">findID</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_Toc&quot;)]/..&#39;</span><span class="p">)</span>
+    <span class="n">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">)</span>
 
-    <span class="n">findHead</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_heading&quot;)]/..&#39;</span><span class="p">)</span>
+    <span class="n">findID</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_heading&quot;)]/..&#39;</span><span class="p">)</span>
+    <span class="n">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">)</span>
 
-    <span class="c1"># remove _heading</span>
-    <span class="k">if</span> <span class="n">findHead</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">findHead</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
-                <span class="n">tail</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">tail</span>
-                <span class="n">node</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-                <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">tail</span>
+    <span class="n">findID</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_Hlk&quot;)]/..&#39;</span><span class="p">)</span>
+    <span class="n">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">bodyxml</span></div>
 

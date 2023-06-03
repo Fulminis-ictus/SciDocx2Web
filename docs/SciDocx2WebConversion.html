@@ -65,7 +65,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.move_table_caption"><code class="docutils literal notranslate"><span class="pre">move_table_caption()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.page_breaks"><code class="docutils literal notranslate"><span class="pre">page_breaks()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.paragraph_numbering"><code class="docutils literal notranslate"><span class="pre">paragraph_numbering()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.remove_toc_and_head"><code class="docutils literal notranslate"><span class="pre">remove_toc_and_head()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.remove_word_lnks"><code class="docutils literal notranslate"><span class="pre">remove_word_lnks()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.style_map_func"><code class="docutils literal notranslate"><span class="pre">style_map_func()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.write_html"><code class="docutils literal notranslate"><span class="pre">write_html()</span></code></a></li>
 </ul>
@@ -104,7 +104,7 @@
 <span id="scidocx2webconversion-module"></span><h1>SciDocx2WebConversion module<a class="headerlink" href="#module-SciDocx2WebConversion" title="Permalink to this heading"></a></h1>
 <p>Convert scientific papers in DOCX format to HTML. See this project’s GitHub page for more info: <a class="reference external" href="https://github.com/Fulminis-ictus/SciDocx2Web">https://github.com/Fulminis-ictus/SciDocx2Web</a></p>
 <p>This is a module that is called by SciDocx2WebUI. It handles all of the actual conversion functions.</p>
-<p>Documentation last updated: 2023.05.16</p>
+<p>Documentation last updated: 2023.06.03</p>
 <p>Author: Tim Reichert</p>
 <p>Version: 1.0 (first public release)</p>
 <p>Uses and is dependent on Mammoth: <a class="reference external" href="https://github.com/mwilliamson/python-mammoth">https://github.com/mwilliamson/python-mammoth</a></p>
@@ -177,6 +177,8 @@
 <dt class="sig sig-object py" id="SciDocx2WebConversion.create_footnotes_list">
 <span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">create_footnotes_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abbreviateFootnotesNumber</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#create_footnotes_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.create_footnotes_list" title="Permalink to this definition"></a></dt>
 <dd><p>Compiles a list of footnotes. Iterates over all &lt;li&gt; elements in the footnote list created by mammoth and saves their contents to a python list.</p>
+<p>There was one case where footnotes started counting at 0 instead of 1. This case has been accounted for by checking whether the list is empty after searching for list items with the ID “footnote-1”.</p>
+<p>An empty footnote list is created if there are no footntoes.</p>
 <p>If footnotes are abbreviated:</p>
 <p>Get footnote text without HTML tags to prevent tags that are never closed due to the abbreviation process.</p>
 <p>Else:</p>
@@ -289,9 +291,9 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="SciDocx2WebConversion.remove_toc_and_head">
-<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">remove_toc_and_head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#remove_toc_and_head"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.remove_toc_and_head" title="Permalink to this definition"></a></dt>
-<dd><p>Removes Word’s “Table Of Contents” and “_heading” IDs. Both of those consist of non-closed “a”-tags that can lead to display errors or mess with the navigation.</p>
+<dt class="sig sig-object py" id="SciDocx2WebConversion.remove_word_lnks">
+<span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">remove_word_lnks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#remove_word_lnks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.remove_word_lnks" title="Permalink to this definition"></a></dt>
+<dd><p>Removes various links that word inserts into the document, including “Table Of Contents”, “_heading” and “_Hlk” link. They are interpreted as non-closed “a”-tags that can lead to display errors or mess with the navigation.</p>
 </dd></dl>
 
 <dl class="py function">
