@@ -100,6 +100,10 @@ def enclose_body(input, bodyCheckVar, pageTitleEntryText):
 ## FOOTNOTES
 def create_footnotes_list(bodyxml, abbreviateFootnotesNumber):
     '''Compiles a list of footnotes. Iterates over all <li> elements in the footnote list created by mammoth and saves their contents to a python list.
+
+    There was one case where footnotes started counting at 0 instead of 1. This case has been accounted for by checking whether the list is empty after searching for list items with the ID "footnote-1".
+
+    An empty footnote list is created if there are no footntoes.
     
     If footnotes are abbreviated:\n
     Get footnote text without HTML tags to prevent tags that are never closed due to the abbreviation process.
@@ -109,7 +113,12 @@ def create_footnotes_list(bodyxml, abbreviateFootnotesNumber):
 
     footnotes = []
 
-    for ol in bodyxml.xpath('.//li[@id="footnote-1"]/..'):
+    if bodyxml.xpath('.//li[@id="footnote-1"]/..') == []:
+        footnotePath = bodyxml.xpath('.//li[@id="footnote-0"]/..')
+    else:
+        footnotePath = bodyxml.xpath('.//li[@id="footnote-1"]/..')
+
+    for ol in footnotePath:
         for li in ol:
             for p in li:
                 # Get footnote text without HTML tags
@@ -288,28 +297,27 @@ def add_Head_IDs(headingsIDVar, bodyxml):
 
     return bodyxml
 
-def remove_toc_and_head(bodyxml):
-    '''Removes Word's "Table Of Contents" and "_heading" IDs. Both of those consist of non-closed "a"-tags that can lead to display errors or mess with the navigation.'''
+def remove_word_lnks(bodyxml):
+    '''Removes various links that word inserts into the document, including "Table Of Contents", "_heading" and "_Hlk" link. They are interpreted as non-closed "a"-tags that can lead to display errors or mess with the navigation.'''
 
-    findToc = bodyxml.xpath('.//a[contains(@id, "_Toc")]/..')
+    def repeat_removal(findID, bodyxml):
+        if findID != None:
+            for node in findID:
+                for a in node:
+                    tail = a.tail
+                    node.remove(a)
+                    node.text = tail
+        
+        return bodyxml
 
-    # remove Toc
-    if findToc != None:
-        for node in findToc:
-            for a in node:
-                tail = a.tail
-                node.remove(a)
-                node.text = tail
+    findID = bodyxml.xpath('.//a[contains(@id, "_Toc")]/..')
+    repeat_removal(findID, bodyxml)
 
-    findHead = bodyxml.xpath('.//a[contains(@id, "_heading")]/..')
+    findID = bodyxml.xpath('.//a[contains(@id, "_heading")]/..')
+    repeat_removal(findID, bodyxml)
 
-    # remove _heading
-    if findHead != None:
-        for node in findHead:
-            for a in node:
-                tail = a.tail
-                node.remove(a)
-                node.text = tail
+    findID = bodyxml.xpath('.//a[contains(@id, "_Hlk")]/..')
+    repeat_removal(findID, bodyxml)
 
     return bodyxml
 

@@ -3,7 +3,7 @@ Convert scientific papers in DOCX format to HTML. See this project's GitHub page
 
 This module displays the GUI and calls SciDocx2WebConversion to start the actual conversion process.
 
-Documentation last updated: 2023.05.16\n
+Documentation last updated: 2023.06.03\n
 Author: Tim Reichert\n
 Version: 1.0 (first public release)
 
@@ -301,6 +301,7 @@ def resetOptions():
         paragraphNumberCheckVar.set(True)
         pageNumberCheckVar.set(False)
         pageNumberStartCheckEntryText.set("1")
+        pageNumberStartCheckEntry.configure(state="disabled")
 
         messagebox.showinfo("Reset successful", "Settings have been reset to original values.")
 
@@ -903,7 +904,7 @@ def convertAndExport():
     bodyxml = SciConvert.add_Head_IDs(headingsIDVar.get(), bodyxml)
 
     # remove TOCs and Heads from heading IDs
-    bodyxml = SciConvert.remove_toc_and_head(bodyxml)
+    bodyxml = SciConvert.remove_word_lnks(bodyxml)
 
     # create navigation
     findH1 = bodyxml.xpath('.//*[self::h1 or self::h2 or self::h3]')
