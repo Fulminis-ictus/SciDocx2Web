@@ -2,13 +2,13 @@
 
 Convert your scientific articles from DOCX to HTML.
 
-1. [What is this](#what-is-this)
-2. [How to use this tool](#how-to-use)
-    2.1. [GUI](#gui)
-    2.2. [CSS](#css)
-3. [Known problems or missing features - Found a bug?](#known-problems)
-4. [FAQ](#faq)
-5. [Acknowledgements](#acknowledgements)
+* [What is this](#what-is-this)
+* [How to use this tool](#how-to-use)
+    * [GUI](#gui)
+    * [CSS](#css)
+* [Known problems or missing features - Found a bug?](#known-problems)
+* [FAQ](#faq)
+* [Acknowledgements](#acknowledgements)
 
 ## What is this? <a name="what-is-this"></a>
 
