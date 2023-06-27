@@ -53,7 +53,7 @@ The easiest way to use this tool is by downloading the project folder that was c
 
 Alternatively, you can clone this repository or download the files and run SciDocx2WebUI.py. You might need to install required modules such as Mammoth, lxml etc. You'll also need to add [darwyl's page break amendment](https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4) to Mammoth's body_xml.py if you want to make use of the page numbering feature.
 
- [//]: # (Web documentation for people who want to mess with the code)
+You can find the code's documentation over [here](https://fulminis-ictus.github.io/SciDocx2Web/).
 
 ### GUI
 
