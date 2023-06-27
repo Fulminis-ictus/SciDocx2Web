@@ -2,7 +2,15 @@
 
 Convert your scientific articles from DOCX to HTML.
 
-## What is this?
+1. [What is this](#what-is-this)
+2. [How to use this tool](#how-to-use)
+    2.1. [GUI](#gui)
+    2.2. [CSS](#css)
+3. [Known problems or missing features - Found a bug?](#known-problems)
+4. [FAQ](#faq)
+5. [Acknowledgements](#acknowledgements)
+
+## What is this? <a name="what-is-this"></a>
 
 SciDocx2Web allows you to convert your academic DOCX articles to HTML code. This tool has been tested with Word and LibreOffice. Support for other text editors can not be guaranteed. The output HTML code possesses several features that could be convenient for scientific publications and that semantically enhance it. Included features are:
 
@@ -44,10 +52,8 @@ Possible alternatives to this tool are:
 - [PubCSS](https://github.com/thomaspark/pubcss/).
 - [Paper Now](https://github.com/PeerJ/paper-now).
 
- [//]: # (Demo/Comparison picture)
 
-
-## How to use
+## How to use this tool <a name="how-to-use"></a>
 
 The easiest way to use this tool is by downloading the project folder that was created with auto-py-to-exe from the [releases tab](https://github.com/Fulminis-ictus/SciDocx2Web/releases). Just open the EXE file. Note that it's unfortunately common for EXE files created from python files to be marked as viruses. I'm attempting to get it whitelisted but might not have contacted the company who owns your virus program yet.
 
@@ -96,7 +102,7 @@ The CSS inserted into the document is more about function than visual appeal. If
     - nav p a.highlightnav
 
 
-## Known problems or missing features - Found a bug?
+## Known problems or missing features - Found a bug? <a name="known-problems"></a>
 
 Make sure to consult the [FAQ](https://github.com/Fulminis-ictus/SciDocx2Web#faq), in case your question is answered there!
 
