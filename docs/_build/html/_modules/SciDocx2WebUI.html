@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SciDocx2WebUI &mdash; SciDocx2Web 1.0 documentation</title>
+  <title>SciDocx2WebUI &mdash; SciDocx2Web 1.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -39,7 +39,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../modules.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">SciDocx2Web</a></li>
 </ul>
 
         </div>
@@ -72,12 +72,14 @@
 
 <span class="sd">This module displays the GUI and calls SciDocx2WebConversion to start the actual conversion process.</span>
 
-<span class="sd">Documentation last updated: 2023.06.03\n</span>
+<span class="sd">Documentation last updated: 2025.10.02\n</span>
 <span class="sd">Author: Tim Reichert\n</span>
-<span class="sd">Version: 1.0 (first public release)</span>
+<span class="sd">Version: 1.1</span>
 
 <span class="sd">Uses and is dependent on Mammoth: https://github.com/mwilliamson/python-mammoth\n</span>
 <span class="sd">Makes use of dwasyl&#39;s added page break detection functionailty: https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4</span>
+
+<span class="sd">This version of the programm is built using Python 3.11.1, Mammoth 1.5.0 and lxml 4.9.2. Using other versions can result in errors, such as missing text.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1">### IMPORTS ###</span>
@@ -88,6 +90,10 @@
 
 <span class="c1"># Path</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
+
+<span class="c1"># Check OS for scrollwheel behaviour</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">name</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span> <span class="k">as</span> <span class="n">fp</span>
 
 <span class="c1"># GUI</span>
 <span class="kn">import</span> <span class="nn">tkinter</span> <span class="k">as</span> <span class="nn">tk</span>
@@ -434,14 +440,23 @@
 
 <span class="n">scrollCanvas</span><span class="o">.</span><span class="n">create_window</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">window</span><span class="o">=</span><span class="n">scrollSecondFrame</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">&quot;nw&quot;</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">_on_mousewheel</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+<span class="n">scroll</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">def</span> <span class="nf">_on_mousewheel</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">scroll</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;Makes the mouse wheel scroll the canvas.&#39;&#39;&#39;</span>
 
-    <span class="n">scrollCanvas</span><span class="o">.</span><span class="n">yview_scroll</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">delta</span><span class="o">/</span><span class="mi">120</span><span class="p">)),</span> <span class="s2">&quot;units&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;nt&quot;</span><span class="p">:</span>
+        <span class="n">scrollCanvas</span><span class="o">.</span><span class="n">yview_scroll</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">delta</span><span class="o">/</span><span class="mi">120</span><span class="p">)),</span> <span class="s2">&quot;units&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">scrollCanvas</span><span class="o">.</span><span class="n">yview_scroll</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">scroll</span><span class="p">),</span> <span class="s2">&quot;units&quot;</span><span class="p">)</span>
 
     <span class="k">return</span>
 
-<span class="n">scrollCanvas</span><span class="o">.</span><span class="n">bind_all</span><span class="p">(</span><span class="s2">&quot;&lt;MouseWheel&gt;&quot;</span><span class="p">,</span> <span class="n">_on_mousewheel</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;nt&quot;</span><span class="p">:</span>
+    <span class="n">scrollCanvas</span><span class="o">.</span><span class="n">bind_all</span><span class="p">(</span><span class="s2">&quot;&lt;MouseWheel&gt;&quot;</span><span class="p">,</span> <span class="n">fp</span><span class="p">(</span><span class="n">_on_mousewheel</span><span class="p">,</span> <span class="n">scroll</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">scrollCanvas</span><span class="o">.</span><span class="n">bind_all</span><span class="p">(</span><span class="s2">&quot;&lt;Button-4&gt;&quot;</span><span class="p">,</span> <span class="n">fp</span><span class="p">(</span><span class="n">_on_mousewheel</span><span class="p">,</span> <span class="n">scroll</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">scrollCanvas</span><span class="o">.</span><span class="n">bind_all</span><span class="p">(</span><span class="s2">&quot;&lt;Button-5&gt;&quot;</span><span class="p">,</span> <span class="n">fp</span><span class="p">(</span><span class="n">_on_mousewheel</span><span class="p">,</span> <span class="n">scroll</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 
 <span class="c1"># variable used for counting up rows (makes it easier to rearrange the UI without having to manually update all values)</span>
 <span class="n">row</span> <span class="o">=</span> <span class="mi">1</span>
@@ -945,6 +960,9 @@
     <span class="nb">input</span> <span class="o">=</span> <span class="n">mammoth</span><span class="o">.</span><span class="n">convert_to_html</span><span class="p">(</span><span class="n">inputPath</span><span class="p">,</span> <span class="n">style_map</span><span class="o">=</span><span class="n">custom_style_map</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
     <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">enclose_body</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">bodyCheckVar</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">pageTitleEntry</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
 
+    <span class="c1"># remove unwanted links that word inserts</span>
+    <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">remove_word_lnks</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">)</span>
+
     <span class="c1"># create footnotes</span>
     <span class="n">footnotes</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">create_footnotes_list</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="n">abbreviateTooltipsEntry</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
 
@@ -971,9 +989,6 @@
 
     <span class="c1"># add heading IDs</span>
     <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">add_Head_IDs</span><span class="p">(</span><span class="n">headingsIDVar</span><span class="o">.</span><span class="n">get</span><span class="p">(),</span> <span class="n">bodyxml</span><span class="p">)</span>
-
-    <span class="c1"># remove TOCs and Heads from heading IDs</span>
-    <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">remove_word_lnks</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">)</span>
 
     <span class="c1"># create navigation</span>
     <span class="n">findH1</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//*[self::h1 or self::h2 or self::h3]&#39;</span><span class="p">)</span>
@@ -1037,7 +1052,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Tim Reichert.</p>
+    <p>&#169; Copyright 2025, Tim Reichert.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

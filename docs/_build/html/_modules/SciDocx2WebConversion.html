@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SciDocx2WebConversion &mdash; SciDocx2Web 1.0 documentation</title>
+  <title>SciDocx2WebConversion &mdash; SciDocx2Web 1.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -39,7 +39,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../modules.html">Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">SciDocx2Web</a></li>
 </ul>
 
         </div>
@@ -72,12 +72,14 @@
 
 <span class="sd">This is a module that is called by SciDocx2WebUI. It handles all of the actual conversion functions.</span>
 
-<span class="sd">Documentation last updated: 2023.05.16\n</span>
+<span class="sd">Documentation last updated: 2025.10.02\n</span>
 <span class="sd">Author: Tim Reichert\n</span>
-<span class="sd">Version: 1.0 (first public release)</span>
+<span class="sd">Version: 1.1</span>
 
 <span class="sd">Uses and is dependent on Mammoth: https://github.com/mwilliamson/python-mammoth\n</span>
 <span class="sd">Makes use of dwasyl&#39;s added page break detection functionailty: https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4</span>
+
+<span class="sd">This version of the programm is built using Python 3.11.1, Mammoth 1.5.0 and lxml 4.9.2. Using other versions can result in errors, such as missing text.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1">### IMPORTS ###</span>
@@ -163,6 +165,26 @@
     <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;&amp;lt;sub class=&amp;quot;pagenumber&amp;quot;&amp;gt;NEW_PAGE_BEGINNING!&amp;lt;/sub&amp;gt;&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;&lt;sub class=&quot;pagenumber&quot;&gt;NEW_PAGE_BEGINNING!&lt;/sub&gt;&#39;</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">)</span>
 
     <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bodyxml</span></div>
+
+<div class="viewcode-block" id="remove_word_lnks"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.remove_word_lnks">[docs]</a><span class="k">def</span> <span class="nf">remove_word_lnks</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;Fills various empty link elements that word inserts into the document, including &quot;Table Of Contents&quot;, &quot;_heading&quot; and &quot;_Hlk&quot; link. They are interpreted as non-closed &quot;a&quot;-tags that can lead to display errors or mess with the navigation. Notify me if you find any more, so I can add them to this list.&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">findID</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">findID</span><span class="p">:</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">bodyxml</span>
+
+    <span class="n">findID</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_Toc&quot;)]&#39;</span><span class="p">)</span>
+    <span class="n">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">)</span>
+
+    <span class="n">findID</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_heading&quot;)]&#39;</span><span class="p">)</span>
+    <span class="n">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">)</span>
+
+    <span class="n">findID</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_Hlk&quot;)]&#39;</span><span class="p">)</span>
+    <span class="n">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">bodyxml</span></div>
 
@@ -363,30 +385,6 @@
         <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;//h1|//h2|//h3&#39;</span><span class="p">):</span>
             <span class="n">node</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;heading&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-
-    <span class="k">return</span> <span class="n">bodyxml</span></div>
-
-<div class="viewcode-block" id="remove_word_lnks"><a class="viewcode-back" href="../SciDocx2WebConversion.html#SciDocx2WebConversion.remove_word_lnks">[docs]</a><span class="k">def</span> <span class="nf">remove_word_lnks</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;Removes various links that word inserts into the document, including &quot;Table Of Contents&quot;, &quot;_heading&quot; and &quot;_Hlk&quot; link. They are interpreted as non-closed &quot;a&quot;-tags that can lead to display errors or mess with the navigation.&#39;&#39;&#39;</span>
-
-    <span class="k">def</span> <span class="nf">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">findID</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">findID</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
-                    <span class="n">tail</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">tail</span>
-                    <span class="n">node</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-                    <span class="n">node</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">tail</span>
-        
-        <span class="k">return</span> <span class="n">bodyxml</span>
-
-    <span class="n">findID</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_Toc&quot;)]/..&#39;</span><span class="p">)</span>
-    <span class="n">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">)</span>
-
-    <span class="n">findID</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_heading&quot;)]/..&#39;</span><span class="p">)</span>
-    <span class="n">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">)</span>
-
-    <span class="n">findID</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">&#39;.//a[contains(@id, &quot;_Hlk&quot;)]/..&#39;</span><span class="p">)</span>
-    <span class="n">repeat_removal</span><span class="p">(</span><span class="n">findID</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">bodyxml</span></div>
 
@@ -697,7 +695,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Tim Reichert.</p>
+    <p>&#169; Copyright 2025, Tim Reichert.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SciDocx2WebConversion module &mdash; SciDocx2Web 1.0 documentation</title>
+  <title>SciDocx2WebConversion module &mdash; SciDocx2Web 1.1 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,7 +18,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="SciDocx2WebUI module" href="SciDocx2WebUI.html" />
-    <link rel="prev" title="Documentation" href="modules.html" /> 
+    <link rel="prev" title="SciDocx2Web" href="modules.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,7 +42,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Documentation</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">SciDocx2Web</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">SciDocx2WebConversion module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.abbreviate_footnotes"><code class="docutils literal notranslate"><span class="pre">abbreviate_footnotes()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebConversion.add_Head_IDs"><code class="docutils literal notranslate"><span class="pre">add_Head_IDs()</span></code></a></li>
@@ -89,7 +89,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">Documentation</a></li>
+          <li class="breadcrumb-item"><a href="modules.html">SciDocx2Web</a></li>
       <li class="breadcrumb-item active">SciDocx2WebConversion module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/SciDocx2WebConversion.rst.txt" rel="nofollow"> View page source</a>
@@ -104,11 +104,12 @@
 <span id="scidocx2webconversion-module"></span><h1>SciDocx2WebConversion module<a class="headerlink" href="#module-SciDocx2WebConversion" title="Permalink to this heading"></a></h1>
 <p>Convert scientific papers in DOCX format to HTML. See this project’s GitHub page for more info: <a class="reference external" href="https://github.com/Fulminis-ictus/SciDocx2Web">https://github.com/Fulminis-ictus/SciDocx2Web</a></p>
 <p>This is a module that is called by SciDocx2WebUI. It handles all of the actual conversion functions.</p>
-<p>Documentation last updated: 2023.06.03</p>
+<p>Documentation last updated: 2025.10.02</p>
 <p>Author: Tim Reichert</p>
-<p>Version: 1.0 (first public release)</p>
+<p>Version: 1.1</p>
 <p>Uses and is dependent on Mammoth: <a class="reference external" href="https://github.com/mwilliamson/python-mammoth">https://github.com/mwilliamson/python-mammoth</a></p>
 <p>Makes use of dwasyl’s added page break detection functionailty: <a class="reference external" href="https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4">https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4</a></p>
+<p>This version of the programm is built using Python 3.11.1, Mammoth 1.5.0 and lxml 4.9.2. Using other versions can result in errors, such as missing text.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="SciDocx2WebConversion.abbreviate_footnotes">
 <span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">abbreviate_footnotes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">footnotes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abbreviateFootnotesNumber</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#abbreviate_footnotes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.abbreviate_footnotes" title="Permalink to this definition"></a></dt>
@@ -293,7 +294,7 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="SciDocx2WebConversion.remove_word_lnks">
 <span class="sig-prename descclassname"><span class="pre">SciDocx2WebConversion.</span></span><span class="sig-name descname"><span class="pre">remove_word_lnks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodyxml</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebConversion.html#remove_word_lnks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebConversion.remove_word_lnks" title="Permalink to this definition"></a></dt>
-<dd><p>Removes various links that word inserts into the document, including “Table Of Contents”, “_heading” and “_Hlk” link. They are interpreted as non-closed “a”-tags that can lead to display errors or mess with the navigation.</p>
+<dd><p>Fills various empty link elements that word inserts into the document, including “Table Of Contents”, “_heading” and “_Hlk” link. They are interpreted as non-closed “a”-tags that can lead to display errors or mess with the navigation. Notify me if you find any more, so I can add them to this list.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -326,14 +327,14 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="modules.html" class="btn btn-neutral float-left" title="Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral float-left" title="SciDocx2Web" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="SciDocx2WebUI.html" class="btn btn-neutral float-right" title="SciDocx2WebUI module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, Tim Reichert.</p>
+    <p>&#169; Copyright 2025, Tim Reichert.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

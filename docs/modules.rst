@@ -1,5 +1,5 @@
-Documentation
-=============
+SciDocx2Web
+===========
 
 .. toctree::
    :maxdepth: 4
