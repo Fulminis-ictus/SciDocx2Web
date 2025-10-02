@@ -3,12 +3,14 @@ Convert scientific papers in DOCX format to HTML. See this project's GitHub page
 
 This is a module that is called by SciDocx2WebUI. It handles all of the actual conversion functions.
 
-Documentation last updated: 2023.06.03\n
+Documentation last updated: 2025.10.02\n
 Author: Tim Reichert\n
-Version: 1.0 (first public release)
+Version: 1.1
 
 Uses and is dependent on Mammoth: https://github.com/mwilliamson/python-mammoth\n
 Makes use of dwasyl's added page break detection functionailty: https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4
+
+This version of the programm is built using Python 3.11.1, Mammoth 1.5.0 and lxml 4.9.2. Using other versions can result in errors, such as missing text.
 """
 
 ### IMPORTS ###
@@ -94,6 +96,26 @@ def enclose_body(input, bodyCheckVar, pageTitleEntryText):
     bodyxml = re.sub(r'&lt;sub class=&quot;pagenumber&quot;&gt;NEW_PAGE_BEGINNING!&lt;/sub&gt;', r'<sub class="pagenumber">NEW_PAGE_BEGINNING!</sub>', bodyxml)
 
     bodyxml = etree.fromstring(bodyxml)
+
+    return bodyxml
+
+def remove_word_lnks(bodyxml):
+    '''Fills various empty link elements that word inserts into the document, including "Table Of Contents", "_heading" and "_Hlk" link. They are interpreted as non-closed "a"-tags that can lead to display errors or mess with the navigation. Notify me if you find any more, so I can add them to this list.'''
+
+    def repeat_removal(findID, bodyxml):
+        if findID != None:
+            for node in findID:
+                node.text = ""
+        return bodyxml
+
+    findID = bodyxml.xpath('.//a[contains(@id, "_Toc")]')
+    repeat_removal(findID, bodyxml)
+
+    findID = bodyxml.xpath('.//a[contains(@id, "_heading")]')
+    repeat_removal(findID, bodyxml)
+
+    findID = bodyxml.xpath('.//a[contains(@id, "_Hlk")]')
+    repeat_removal(findID, bodyxml)
 
     return bodyxml
 
@@ -294,30 +316,6 @@ def add_Head_IDs(headingsIDVar, bodyxml):
         for node in bodyxml.xpath('//h1|//h2|//h3'):
             node.attrib['id'] = 'heading' + str(i)
             i += 1
-
-    return bodyxml
-
-def remove_word_lnks(bodyxml):
-    '''Removes various links that word inserts into the document, including "Table Of Contents", "_heading" and "_Hlk" link. They are interpreted as non-closed "a"-tags that can lead to display errors or mess with the navigation.'''
-
-    def repeat_removal(findID, bodyxml):
-        if findID != None:
-            for node in findID:
-                for a in node:
-                    tail = a.tail
-                    node.remove(a)
-                    node.text = tail
-        
-        return bodyxml
-
-    findID = bodyxml.xpath('.//a[contains(@id, "_Toc")]/..')
-    repeat_removal(findID, bodyxml)
-
-    findID = bodyxml.xpath('.//a[contains(@id, "_heading")]/..')
-    repeat_removal(findID, bodyxml)
-
-    findID = bodyxml.xpath('.//a[contains(@id, "_Hlk")]/..')
-    repeat_removal(findID, bodyxml)
 
     return bodyxml
 

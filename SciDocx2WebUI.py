@@ -3,12 +3,14 @@ Convert scientific papers in DOCX format to HTML. See this project's GitHub page
 
 This module displays the GUI and calls SciDocx2WebConversion to start the actual conversion process.
 
-Documentation last updated: 2023.06.03\n
+Documentation last updated: 2025.10.02\n
 Author: Tim Reichert\n
-Version: 1.0 (first public release)
+Version: 1.1
 
 Uses and is dependent on Mammoth: https://github.com/mwilliamson/python-mammoth\n
 Makes use of dwasyl's added page break detection functionailty: https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4
+
+This version of the programm is built using Python 3.11.1, Mammoth 1.5.0 and lxml 4.9.2. Using other versions can result in errors, such as missing text.
 """
 
 ### IMPORTS ###
@@ -19,6 +21,10 @@ import SciDocx2WebConversion as SciConvert # Handles this tool's conversion
 
 # Path
 import os.path
+
+# Check OS for scrollwheel behaviour
+from os import name
+from functools import partial as fp
 
 # GUI
 import tkinter as tk
@@ -365,14 +371,23 @@ scrollSecondFrame.grid(row=0, column=0, sticky="NW")
 
 scrollCanvas.create_window((0,0), window=scrollSecondFrame, anchor="nw")
 
-def _on_mousewheel(event):
+scroll = 0
+
+def _on_mousewheel(event, scroll):
     '''Makes the mouse wheel scroll the canvas.'''
 
-    scrollCanvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    if os.name == "nt":
+        scrollCanvas.yview_scroll(int(-1*(event.delta/120)), "units")
+    else:
+        scrollCanvas.yview_scroll(int(scroll), "units")
 
     return
 
-scrollCanvas.bind_all("<MouseWheel>", _on_mousewheel)
+if os.name == "nt":
+    scrollCanvas.bind_all("<MouseWheel>", fp(_on_mousewheel, scroll=0))
+else:
+    scrollCanvas.bind_all("<Button-4>", fp(_on_mousewheel, scroll=-1))
+    scrollCanvas.bind_all("<Button-5>", fp(_on_mousewheel, scroll=1))
 
 # variable used for counting up rows (makes it easier to rearrange the UI without having to manually update all values)
 row = 1
@@ -876,6 +891,9 @@ def convertAndExport():
     input = mammoth.convert_to_html(inputPath, style_map=custom_style_map).value
     bodyxml = SciConvert.enclose_body(input, bodyCheckVar.get(), pageTitleEntry.get())
 
+    # remove unwanted links that word inserts
+    bodyxml = SciConvert.remove_word_lnks(bodyxml)
+
     # create footnotes
     footnotes = SciConvert.create_footnotes_list(bodyxml, abbreviateTooltipsEntry.get())
 
@@ -902,9 +920,6 @@ def convertAndExport():
 
     # add heading IDs
     bodyxml = SciConvert.add_Head_IDs(headingsIDVar.get(), bodyxml)
-
-    # remove TOCs and Heads from heading IDs
-    bodyxml = SciConvert.remove_word_lnks(bodyxml)
 
     # create navigation
     findH1 = bodyxml.xpath('.//*[self::h1 or self::h2 or self::h3]')

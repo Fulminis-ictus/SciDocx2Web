@@ -23,7 +23,7 @@ SciDocx2Web allows you to convert your academic DOCX articles to HTML code. This
     - The chapter you're scrolling through is highlighted in the navigation.
     - The text and navigation are separated into two sections. The navigation is sticky, making it scroll alongside the main text.
 - Citability:
-    - The start of each new page is marked for easier cross referencability between the DOCX file and the HTML page.
+    - The start of each new page is marked for easier cross referencing between the DOCX file and the HTML page.
     - Each paragraph is numbered.
 - Predefined custom style map to mark the following elements in the HTML code:
     - Headings (first, second and third level).
@@ -43,7 +43,7 @@ SciDocx2Web allows you to convert your academic DOCX articles to HTML code. This
 
 The GUI has settings that let you choose which features to include or not to include in your output.
 
-This project was created as part of the publication plans of the [Forschungsgemeinschaft VideospielMusikWissenschaft](https://videospielmusikwissenschaft.de) (FVMW, Research Group for Video Game Music Studies). We decided that having footnote tooltips and some form of citability aid would benefit our publications. You can find examples with similar features [here](https://www.mtosmt.org/issues/mto.19.25.3/mto.19.25.3.medina.gray.html) or [here](https://zfdg.de/wp_2021_001). Incorporating said features manually for every article would be very time-consuming, and as such this tool was created. I added additional features, as well as a GUI with options to make it usable for people outside our research group.
+This project was created as part of the publication efforts of the [Forschungsgemeinschaft VideospielMusikWissenschaft](https://videospielmusikwissenschaft.de) (FVMW, Research Group for Video Game Music Studies). We decided that having footnote tooltips and some form of citability aid would benefit our publications. You can find examples with similar features [here](https://www.mtosmt.org/issues/mto.19.25.3/mto.19.25.3.medina.gray.html) or [here](https://zfdg.de/wp_2021_001). Incorporating said features manually for every article would be very time-consuming, and as such this tool was created. I added additional features, as well as a GUI with options to make it usable for people outside our research group.
 
 Possible alternatives to this tool are:
 - [Mammoth](https://github.com/mwilliamson/python-mammoth), which this project uses and is reliant on.
@@ -57,7 +57,7 @@ Possible alternatives to this tool are:
 
 The easiest way to use this tool is by downloading the project folder that was created with auto-py-to-exe from the [releases tab](https://github.com/Fulminis-ictus/SciDocx2Web/releases). Just open the EXE file. Note that it's unfortunately common for EXE files created from python files to be marked as viruses. I'm attempting to get it whitelisted but might not have contacted the company who owns your virus program yet.
 
-Alternatively, you can clone this repository or download the files and run SciDocx2WebUI.py. You might need to install required modules such as Mammoth, lxml etc. You'll also need to add [darwyl's page break amendment](https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4) to Mammoth's body_xml.py if you want to make use of the page numbering feature.
+Alternatively, you can clone this repository or download the files and run SciDocx2WebUI.py. You might need to install required module versions (Python 3.11.1, Mammoth 1.5.0 and lxml 4.9.2). Other versions of these modules have proven to make text disappear. You'll also need to add [darwyl's page break amendment](https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4) to Mammoth's body_xml.py if you want to make use of the page numbering feature.
 
 You can find the code's documentation over [here](https://fulminis-ictus.github.io/SciDocx2Web/).
 
@@ -126,6 +126,7 @@ Currently know issues or missing features are:
 - **"Why is my video embed not working?"** Make sure you're using the embed link and not the normal link. YouTube's embed link looks something like this: https://www.youtube.com/embed/VIDEOID.
 - **Why is the program being flagged as a virus?** It's unfortunately [common](https://medium.com/@markhank/how-to-stop-your-python-programs-being-seen-as-malware-bfd7eb407a7) for EXE files created from python files to be false positives. I'm attempting to get it whitelisted, but might not have contacted the company who owns your virus program yet.
 - **Why are you using tooltip spans instead of title attributes?** Title attributes unfortunately aren't very accessible. [(1)](https://www.24a11y.com/2017/the-trials-and-tribulations-of-the-title-attribute/), [(2)](https://sarahmhigley.com/writing/tooltips-in-wcag-21/)
+- **Why is some of the text missing in the converted file?** If you are running the .py files and not using the .exe, then you might need to run them using specific module versions. These include: Python 3.11.1, Mammoth 1.5.0 and lxml 4.9.2.
 
 
 ## Acknowledgements
