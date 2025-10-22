@@ -99,15 +99,19 @@ def enclose_body(input, bodyCheckVar, pageTitleEntryText):
 
     return bodyxml
 
-def remove_word_lnks(bodyxml):
-    '''Fills various empty link elements that word inserts into the document, including "Table Of Contents", "_heading" and "_Hlk" link. They are interpreted as non-closed "a"-tags that can lead to display errors or mess with the navigation. Notify me if you find any more, so I can add them to this list.'''
+def remove_empty_elements(bodyxml):
+    '''Fills various empty elements that word inserts into the document, including "_Toc", "_heading" and "_Hlk" links. They are interpreted as self-closing "a"-tags that can lead to display errors, missing text or interfere with the navigation.'''
 
     def repeat_removal(findID, bodyxml):
         if findID != None:
             for node in findID:
                 node.text = ""
         return bodyxml
+    
+    findID = bodyxml.xpath('//*[not(text())]')
+    repeat_removal(findID, bodyxml)
 
+    """
     findID = bodyxml.xpath('.//a[contains(@id, "_Toc")]')
     repeat_removal(findID, bodyxml)
 
@@ -116,14 +120,13 @@ def remove_word_lnks(bodyxml):
 
     findID = bodyxml.xpath('.//a[contains(@id, "_Hlk")]')
     repeat_removal(findID, bodyxml)
+    """
 
     return bodyxml
 
 ## FOOTNOTES
 def create_footnotes_list(bodyxml, abbreviateFootnotesNumber):
     '''Compiles a list of footnotes. Iterates over all <li> elements in the footnote list created by mammoth and saves their contents to a python list.
-
-    There was one case where footnotes started counting at 0 instead of 1. This case has been accounted for by checking whether the list is empty after searching for list items with the ID "footnote-1".
 
     An empty footnote list is created if there are no footntoes.
     
@@ -135,10 +138,7 @@ def create_footnotes_list(bodyxml, abbreviateFootnotesNumber):
 
     footnotes = []
 
-    if bodyxml.xpath('.//li[@id="footnote-1"]/..') == []:
-        footnotePath = bodyxml.xpath('.//li[@id="footnote-0"]/..')
-    else:
-        footnotePath = bodyxml.xpath('.//li[@id="footnote-1"]/..')
+    footnotePath = bodyxml.xpath('.//ol/li[starts-with(@id, "footnote-")]/..')
 
     for ol in footnotePath:
         for li in ol:
@@ -543,7 +543,6 @@ def create_sections(bodyxml):
 
     for heading in findH1:
         elements = bodyxml.xpath('.//' + heading.tag + '[@id="' + heading.attrib["id"] + '"]/following-sibling::h1[1]/preceding-sibling::*')
-        print(elements)
         elements.reverse()
 
         section = etree.Element('section')

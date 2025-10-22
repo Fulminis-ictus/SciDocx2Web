@@ -818,7 +818,7 @@ linkscss = 'a:link {color: #0000ff; text-decoration:none;}\na:visited {color: #8
 listscss = 'li {font-size: 18px; color: #454545;}'
 
 # tables
-tablecss = 'table {margin-top: 28px;}\ntable, th, td {border: 1px solid;}\ntd {padding: 0px 5px;}\ncaption {caption-side: bottom; text-align: left; font-size: 15px;}'
+tablecss = 'table {margin-top: 28px;}\ntable, th, td {border: 1px solid;}\ntd {padding: 0px 5px;}\ncaption {caption-side: bottom; text-align: left; font-size: 15px; color: #454545;}'
 
 # horizontal rules
 hrcss = 'hr {margin-top: 28px;}'
@@ -891,8 +891,8 @@ def convertAndExport():
     input = mammoth.convert_to_html(inputPath, style_map=custom_style_map).value
     bodyxml = SciConvert.enclose_body(input, bodyCheckVar.get(), pageTitleEntry.get())
 
-    # remove unwanted links that word inserts
-    bodyxml = SciConvert.remove_word_lnks(bodyxml)
+    # remove unwanted links that the text processor adds
+    bodyxml = SciConvert.remove_empty_elements(bodyxml)
 
     # create footnotes
     footnotes = SciConvert.create_footnotes_list(bodyxml, abbreviateTooltipsEntry.get())
