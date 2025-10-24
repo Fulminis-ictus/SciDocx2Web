@@ -100,7 +100,7 @@ def enclose_body(input, bodyCheckVar, pageTitleEntryText):
     return bodyxml
 
 def remove_empty_elements(bodyxml):
-    '''Fills various empty elements that word inserts into the document, including "_Toc", "_heading" and "_Hlk" links. They are interpreted as self-closing "a"-tags that can lead to display errors, missing text or interfere with the navigation.'''
+    '''Fills various empty elements that word inserts into the document, including "_Toc", "_heading" and "_Hlk" links. They are interpreted as self-closing <a>-tags that can lead to display errors, missing text or interfere with the navigation. Ignores <br>-tags'''
 
     def repeat_removal(findID, bodyxml):
         if findID != None:
@@ -108,7 +108,7 @@ def remove_empty_elements(bodyxml):
                 node.text = ""
         return bodyxml
     
-    findID = bodyxml.xpath('//*[not(text())]')
+    findID = bodyxml.xpath('//* [not(text()) and not(self::br)] ')
     repeat_removal(findID, bodyxml)
 
     """
