@@ -55,7 +55,7 @@ Possible alternatives to this tool are:
 
 ## How to use this tool <a name="how-to-use"></a>
 
-The easiest way to use this tool is by downloading the project folder that was created with auto-py-to-exe from the [releases tab](https://github.com/Fulminis-ictus/SciDocx2Web/releases). Just open the EXE file. Note that it's unfortunately common for EXE files created from python files to be marked as viruses. I'm attempting to get it whitelisted but might not have contacted the company who owns your virus program yet.
+The easiest way to use this tool is by downloading the project folder that was created with auto-py-to-exe from the [releases tab](https://github.com/Fulminis-ictus/SciDocx2Web/releases). Just open the EXE file. Note that it's unfortunately common for EXE files created from python files to be marked as viruses.
 
 Alternatively, you can clone this repository or download the files and run SciDocx2WebUI.py. You might need to install required module versions (Python 3.11.1, Mammoth 1.5.0 and lxml 4.9.2). Other versions of these modules have proven to make text disappear. You'll also need to add [darwyl's page break amendment](https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4) to Mammoth's body_xml.py if you want to make use of the page numbering feature.
 
