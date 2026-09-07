@@ -3,14 +3,14 @@ Convert scientific papers in DOCX format to HTML. See this project's GitHub page
 
 This is a module that is called by SciDocx2WebUI. It handles all of the actual conversion functions.
 
-Documentation last updated: 2025.10.02\n
+Documentation last updated: 2026.09.06\n
 Author: Tim Reichert\n
-Version: 1.1
+Version: 1.2
 
 Uses and is dependent on Mammoth: https://github.com/mwilliamson/python-mammoth\n
 Makes use of dwasyl's added page break detection functionailty: https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4
 
-This version of the programm is built using Python 3.11.1, Mammoth 1.5.0 and lxml 4.9.2. Using other versions can result in errors, such as missing text.
+This version of the program is built using Python 3.13.15, Mammoth 1.12.1 and lxml 6.1.3. Using other versions can result in errors, such as missing text.
 """
 
 ### IMPORTS ###
@@ -21,7 +21,7 @@ from html import unescape # Replace HTML entities with their actual symbols
 from html import escape # Re-add escape characters in code inside <code> tags
 
 # GUI
-from tkinter import messagebox
+from PySide6.QtWidgets import QMessageBox
 
 
 ### MAIN CODE ###
@@ -111,17 +111,6 @@ def remove_empty_elements(bodyxml):
     findID = bodyxml.xpath('//* [not(text()) and not(self::br)] ')
     repeat_removal(findID, bodyxml)
 
-    """
-    findID = bodyxml.xpath('.//a[contains(@id, "_Toc")]')
-    repeat_removal(findID, bodyxml)
-
-    findID = bodyxml.xpath('.//a[contains(@id, "_heading")]')
-    repeat_removal(findID, bodyxml)
-
-    findID = bodyxml.xpath('.//a[contains(@id, "_Hlk")]')
-    repeat_removal(findID, bodyxml)
-    """
-
     return bodyxml
 
 ## FOOTNOTES
@@ -172,12 +161,12 @@ def abbreviate_footnotes(footnotes, abbreviateFootnotesNumber):
                 if len(footnotes[i]) > abbreviateFootnotesNumber:
                     footnotes[i] = footnotes[i][:abbreviateFootnotesNumber] + '[...]'
         else:
-            messagebox.showerror('Tooltip abbreviation unsuccessful', 'The file conversion will continue but the tooltip abbreviation was unsuccessful. The tooltip abbreviation input field ("Abbreviate tooltips after how many symbols?") only accepts integers.')
+            QMessageBox.warning(self, 'Tooltip abbreviation unsuccessful', 'The file conversion will continue but the tooltip abbreviation was unsuccessful. The tooltip abbreviation input field ("Abbreviate tooltips after how many symbols?") only accepts integers.')
 
     return footnotes
 
 def add_wbr_footnotes(footnotesAbbr, abbreviateFootnotesNumber):
-    '''Finds all slashes within footnotes and adds <wbr> tags after them to ensure that links automatically receive a line break when necessary. 
+    '''Finds all slashes, colons, and hashtags within footnotes and adds <wbr> tags after them to ensure that links automatically receive a line break when necessary. 
     
     If footnotes are abbreviated:\n
     Apply to all text. Since all HTML tags have been removed in a previous step there's no need to worry about HTML tags being affected.
@@ -189,6 +178,8 @@ def add_wbr_footnotes(footnotesAbbr, abbreviateFootnotesNumber):
     if abbreviateFootnotesNumber != "":
         for i in range(len(footnotesAbbr)):
             footnotesAbbr[i] = re.sub(r'/', r'/<wbr>', footnotesAbbr[i])
+            footnotesAbbr[i] = re.sub(r':', r':<wbr>', footnotesAbbr[i])
+            footnotesAbbr[i] = re.sub(r'#', r'#<wbr>', footnotesAbbr[i])
 
     # insert <wbr> only inside the <a> elements
     else:
@@ -196,6 +187,8 @@ def add_wbr_footnotes(footnotesAbbr, abbreviateFootnotesNumber):
             if re.compile(r'(<a.*?>)').search(footnotesAbbr[i]): # check if a link exists in the footnote before proceeding.
                 replace = re.sub(r'(.*?)(<a.*?>)(.*?)(</a>)(.*)', r'\3', footnotesAbbr[i])
                 replace = re.sub(r'/', r'/<wbr>', replace)
+                replace = re.sub(r':', r':<wbr>', replace)
+                replace = re.sub(r'#', r'#<wbr>', replace)
                 footnotesAbbr[i] = re.sub(r'(<a.*?>)(.*?)(</a>)', r'\1' + replace + r'\3', footnotesAbbr[i])
 
     return footnotesAbbr
@@ -229,7 +222,6 @@ def insert_footnotes(tooltipsCheckVar, bodyxml, footnotesAbbr):
             node.append(tooltipSpan)
             i += 1
 
-    #print(etree.tostring(bodyxml))
     return bodyxml
 
 def adjust_footnotes(tooltipsCheckVar, bodyxml):
@@ -245,15 +237,17 @@ def adjust_footnotes(tooltipsCheckVar, bodyxml):
 
     if tooltipsCheckVar:
         # remove <sup> elements
-        while bodyxml.xpath('//sup/span[contains(@class, "tooltippop")]/..'):
-            for node in bodyxml.xpath('//sup/span[contains(@class, "tooltippop")]/..'):
-                for a in node:
-                    node.addnext(a)
-                node.getparent().remove(node)
+        for node in bodyxml.xpath('//sup/span[contains(@class, "tooltippop")]/..'):
+            # lxml seems to identify text as <sup>-tail that shouldn't be identified as a tail. That's why the "tail" needs to be re-appended to the child, as it gets removed with the sup-node
+            for a in node:
+                if node.tail:
+                    tail = node.tail
+                    a.tail = tail
+                node.addnext(a)
+            node.getparent().remove(node)
         
-        # add <sup> elements containing the footnote numbers at the right position
+        # transform text inside <a> from [N] to N, give it an aria-label, insert it into the <sup> elements, remove it from the <a> element
         for a in bodyxml.xpath('//a[contains(@id, "footnote-ref")]'):
-            # transform text inside <a> from [N] to N, give it an aria-label, insert it into the <sup> elements, remove it from the <a> element
             a.text = re.sub(r'(\[)(.*)(\])', r'\2', a.text)
             a.attrib['label'] = 'Link to footnote list at the bottom of the document.'
             sup = etree.Element('sup')
@@ -268,7 +262,7 @@ def adjust_footnotes(tooltipsCheckVar, bodyxml):
         for node in bodyxml.xpath('//a[contains(@id, "footnote-ref")]'):
             # transform text from [N] to N
             node.text = re.sub(r'(\[)(.*)(\])', r'\2', node.text)
-
+    
     return bodyxml
 
 def footnotes_bottom_adjust(bodyxml, commentBottomFootnotes, breakElement, hrElement):
@@ -319,7 +313,7 @@ def add_Head_IDs(headingsIDVar, bodyxml):
 
     return bodyxml
 
-def create_navigation(navigationVar, navigationTypeVar, findH1, navigationElement, commentNavigation, h1Navigation, navGridDiv):
+def create_navigation(navigationVar, navigationTypePar, navigationTypeBut, findH1, navigationElement, commentNavigation, h1Navigation, navGridDiv):
     '''If "Create navigation?" is checked:\n
     Creates a navigation by compiling a list of all <h1>, <h2> and <h3> elements. Each navigation item is a paragraph or a button, depending on which radio button option is activated in the GUI. Adds links with href attributes that link each navigation item to their respective heading.
     
@@ -334,7 +328,7 @@ def create_navigation(navigationVar, navigationTypeVar, findH1, navigationElemen
             i = 1
             for node in findH1:
                 # create <p> or <button>
-                if navigationTypeVar == 'paragraph':
+                if navigationTypePar:
                     elementPorB = etree.Element('p')
                 else:
                     elementPorB = etree.Element('button')
@@ -392,7 +386,7 @@ def embed_images(bodyxml, dimensions):
     else:
         width = None
         height = None
-        messagebox.showinfo('No image dimensions used', 'Faulty input in the audio dimensions input field. No "width" and "height" parameters have been inserted. Make sure the input is two integers seperated by a comma.')
+        QMessageBox.warning(self, 'No image dimensions used', 'Faulty input in the image dimensions input field. No "width" and "height" parameters have been inserted. Make sure the input is two integers seperated by a comma.')
 
     # insert src and width and height
     for node in bodyxml.xpath('//img[@class="insertimage"]'):
@@ -432,7 +426,7 @@ def embed_videos(bodyxml, dimensions):
     else:
         width = None
         height = None
-        messagebox.showinfo('No video dimensions used', 'Faulty input in the video dimensions input field. No "width" and "height" parameters have been inserted. Make sure the input is two integers seperated by a comma.')
+        QMessageBox.warning(self, 'No video dimensions used', 'Faulty input in the video dimensions input field. No "width" and "height" parameters have been inserted. Make sure the input is two integers seperated by a comma.')
 
     # insert src and width and height
     for node in bodyxml.xpath('//iframe[@class="insertvideo"]'):
@@ -504,7 +498,7 @@ def page_breaks(pageNumberCheckVar, pageNumberStartCheckVar, bodyxml, bodyCheckV
                     pageNumber.text = '{' + str(i) + '}'
                 i += 1
         else:
-            messagebox.showerror('Page number insertion unsuccessful', 'The file conversion will continue but the page number insertion was unsuccessful. The starting page number input field only accepts integers.')
+            QMessageBox.warning(self, 'Page number insertion unsuccessful', 'The file conversion will continue but the page number insertion was unsuccessful. The starting page number input field only accepts integers.')
             for pageNumber in bodyxml.xpath('.//sub[@class="pagenumber"]'):
                 pageNumber.text = ''
     else:
@@ -521,10 +515,10 @@ def paragraph_numbering(paragraphNumberCheckVar, bodyxml):
         i = 1
         for node in bodyxml.xpath('//div[@class="mainGrid"]/p[not(@class="mediacaption") and not(@class="ignorePNum") and not(@class="bibliography")]|//blockquote'):
             if node.text != None:
-                node.text = '[' + str(i) + '] ' + node.text
+                node.text = '<span class="paranum">[' + str(i) + ']</span>' + node.text
                 i += 1
             else:
-                node.text = '[' + str(i) + '] '
+                node.text = '<span class="paranum">[' + str(i) + ']</span>'
                 i += 1
 
     return bodyxml

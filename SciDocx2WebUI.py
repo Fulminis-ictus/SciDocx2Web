@@ -3,14 +3,14 @@ Convert scientific papers in DOCX format to HTML. See this project's GitHub page
 
 This module displays the GUI and calls SciDocx2WebConversion to start the actual conversion process.
 
-Documentation last updated: 2025.10.02\n
+Documentation last updated: 2026.09.06\n
 Author: Tim Reichert\n
-Version: 1.1
+Version: 1.2
 
 Uses and is dependent on Mammoth: https://github.com/mwilliamson/python-mammoth\n
 Makes use of dwasyl's added page break detection functionailty: https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4
 
-This version of the programm is built using Python 3.11.1, Mammoth 1.5.0 and lxml 4.9.2. Using other versions can result in errors, such as missing text.
+This version of the program is built using Python 3.13.15, Mammoth 1.12.1 and lxml 6.1.3. Using other versions can result in errors, such as missing text.
 """
 
 ### IMPORTS ###
@@ -22,709 +22,697 @@ import SciDocx2WebConversion as SciConvert # Handles this tool's conversion
 # Path
 import os.path
 
-# Check OS for scrollwheel behaviour
-from os import name
-from functools import partial as fp
-
 # GUI
-import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
-from tkinter import filedialog
-from tkinter import scrolledtext
+from PySide6.QtWidgets import QCheckBox, QLabel, QLineEdit, QRadioButton, QTextEdit, QMainWindow, QApplication, QPushButton, QWidget, QVBoxLayout, QSpacerItem, QSizePolicy, QScrollArea, QMessageBox, QFileDialog, QDockWidget, QListWidget
+from PySide6.QtCore import Qt
 
 # Saving settings to and loading them from .ini
 from configparser import ConfigParser
 
-### GUI ###
-# input/output variables
-inputPath = None
-outputPath = None
-
-## FUNCTIONS
-# input and output functions
-def inputPathFunc():
-    '''"Browse" button:
-
-    Prompts the user to choose the file that shall be converted and replaces the input path field text with the path of the chosen file.'''
-
-    global inputPath
-
-    # delete current text in input field
-    inputPathEntry.config(state="normal")
-    inputPathEntry.delete(0, "end")
-    inputPathEntry.config(state="disabled")
-    
-    # get input path
-    inputPath = filedialog.askopenfile(mode="r", filetypes=((".docx file", "*.docx"), ("All files", "*.*")))
-
-    # insert input path into field
-    if (inputPath != None) and (inputPath != ""):
-        inputPathEntry.config(state="normal")
-        inputPath = os.path.abspath(inputPath.name) # get only stem of file
-        inputPathEntry.insert(0, inputPath)
-        inputPathEntry.xview("end") # scroll view to the right-most part of the path text
-        inputPathEntry.config(state="disabled")
-
-    return
-
-def submitFunc():
-    '''"Convert" button:
-
-    Prompts the user to choose the output path. Starts the conversion process by calling "convertAndExport()".\n
-    Throws an error if no input file has been chosen yet.'''
-
-    global outputPath
-    
-    # get output path
-    outputPath = filedialog.asksaveasfilename(defaultextension=".html", filetypes=((".html file", "*.html"), ("All files", "*.*")))
-
-    # start conversion process
-    if inputPath != None:
-        if (outputPath != None) and (outputPath != ""):
-            convertAndExport()
-    else:
-        messagebox.showerror("No input file given", "Choose an input file.")
-
-    return
-
-# enable/disable fields depending on what other fields are enabled or disabled and reset variables if necessary
-def ablePageTitleAndCssAndJavascript():
-    '''Disables the "Page title" entry, "Add suggested css?" checkbox and "Add javascript to highlight navigation while scrolling?" checkbox if "Only export the body?" is checked. Does the opposite if it's unchecked.'''
-    # "Only export the body?" is checked: disable
-    if bodyCheckVar.get():
-        pageTitleEntry.config(state="disabled")
-        cssCheck.config(state="disabled")
-        cssCheckVar.set(False)
-        javascriptCheck.config(state="disabled")
-        javascriptCheckVar.set(False)
-
-    # enable
-    else:
-        pageTitleEntry.config(state="normal")
-        cssCheck.config(state="normal")
-        javascriptCheck.config(state="normal")
-
-    return
-
-def ableNavigation():
-    '''Disables the "Create navigation?" checkbox and the "Paragraph" and "Button" radio buttons if "Add IDs to headings?" is unchecked. Does the opposite if it's checked.'''
-
-    # "Add IDs to headings?" is checked: enable
-    if headingsIDVar.get():
-        navigationCheck.config(state="normal")
-
-    # disable
-    else:
-        navigationCheck.config(state="disabled")
-        navigationPar.config(state="disabled")
-        navigationBut.config(state="disabled")
-        navigationVar.set(False)
-
-    return
-
-def ableNavigationElement():
-    '''Disables the "Paragraph" and "Button" radio buttons if "Create navigation?" is unchecked. Does the opposite if it's checked.'''
-
-    # "Create navigation?" is checked: enable
-    if navigationVar.get():
-        navigationPar.config(state="normal")
-        navigationBut.config(state="normal")
-
-    # disable
-    else:
-        navigationPar.config(state="disabled")
-        navigationBut.config(state="disabled")
-
-    return
-
-def ableIgnorePNum():
-    '''Disables the "Detect paragraphs that should not be numbered..." input field if "Number the paragraphs?" is unchecked. Does the opposite if it's checked.'''
-
-    # "Number the paragraphs?" is checked: enable
-    if paragraphNumberCheckVar.get():
-        detectIgnorePNumEntry.config(state="normal")
-
-    # disable
-    else:
-        detectIgnorePNumEntry.config(state="disabled")
-
-    return
-
-def ablePageNum():
-    '''Disables the "Which docx page should be counted..." input field if "Insert page numbers?" is unchecked. Does the opposite if it's checked.'''
-
-    # "Insert page numbers?" is checked: enable
-    if pageNumberCheckVar.get():
-        pageNumberStartCheckEntry.config(state="normal")
-
-    # disable
-    else:
-        pageNumberStartCheckEntry.config(state="disabled")
-
-    return
-
-def ableAbbreviateTooltips():
-    '''Disables the "Abbreviate tooltips after how many symbols?" input field if "Add tooltips to footnotes?" is unchecked. Does the opposite if it's checked.'''
-
-    # "Add tooltips to footnotes?" is checked: enable
-    if tooltipsCheckVar.get():
-        abbreviateTooltipsEntry.config(state="normal")
-
-    # disable
-    else:
-        abbreviateTooltipsEntry.config(state="disabled")
-
-    return
-
-def saveOptions():
-    '''"Save options" button:
-    
-    Writes current settings to the INI file and display a message stating that settings has been saved successfully.'''
-
-    # read .ini file
-    config.read(iniLocation)
-
-    # set to new values
-    config.set("Body and head", "bodyCheckVar", str(bodyCheckVar.get()))
-    config.set('Body and head', 'csscheckvar', str(cssCheckVar.get()))
-    config.set('Body and head', 'javascriptcheckvar', str(javascriptCheckVar.get()))
-    config.set("Body and head", "pagetitleentrytext", pageTitleEntry.get())
-    config.set("Heading IDs and nav", "headingsidvar", str(headingsIDVar.get()))
-    config.set("Heading IDs and nav", "navigationvar", str(navigationVar.get()))
-    config.set("Heading IDs and nav", "navigationtypevar", navigationTypeVar.get())
-    config.set('Format templates', 'detectheadingsentry1', detectHeadingsEntry1.get())
-    config.set('Format templates', 'detectheadingsentry2', detectHeadingsEntry2.get())
-    config.set('Format templates', 'detectheadingsentry3', detectHeadingsEntry3.get())
-    config.set('Format templates', 'detectimagesentry', detectImagesEntry.get())
-    config.set('Format templates', 'imagesdimensionsentry', imagesDimensionsEntry.get())
-    config.set('Format templates', 'detectvideosentry', detectVideosEntry.get())
-    config.set('Format templates', 'videosdimensionsentry', videosDimensionsEntry.get())
-    config.set('Format templates', 'detectaudioentry', detectAudioEntry.get())
-    config.set('Format templates', 'detectMediaentry', detectMediaEntry.get())
-    config.set('Format templates', 'detectblockquotesentry', detectBlockquotesEntry.get())
-    config.set('Format templates', 'detecttablecaptionsentry', detectTableCaptionsEntry.get())
-    config.set('Format templates', 'detectBibliographyentry', detectBibliographyEntry.get())
-    config.set('Format templates', 'detectignorepnumentry', detectIgnorePNumEntry.get())
-    config.set('Format templates', 'detectcodeentry', detectCodeEntry.get())
-    config.set('Format templates', 'customstylemap', customStyleMapEntry.get('1.0', 'end'))
-    config.set('Tooltips', 'tooltipscheckvar', str(tooltipsCheckVar.get()))
-    config.set('Tooltips', 'abbreviatetooltipsentry', abbreviateTooltipsEntry.get())
-    config.set('Citability', 'paragraphnumbercheckvar', str(paragraphNumberCheckVar.get()))
-    config.set('Citability', 'pagenumbercheckvar', str(pageNumberCheckVar.get()))
-    config.set('Citability', 'pagenumberstartcheckvar', str(pageNumberStartCheckEntry.get()))
-
-    # write .ini file
-    with open(iniLocation, "w") as configFile:
-        config.write(configFile)
-
-    messagebox.showinfo("Saved", "Settings have been saved.")
-
-    return
-
-def resetOptions():
-    '''"Reset options" button:
-    
-    Asks the user if they really want to reset the current options.
-
-    If yes: Resets options to their default state. The default state has been determined by the author of this software. Updates the GUI, writes new settings to the INI file and displays a message stating that settings have been reset successfully.'''
-
-    reallyReset = messagebox.askquestion('Reset options', 'Are you sure you want to reset the options? Current settings will be overwritten.', icon='warning')
-    if reallyReset == 'yes':
-        # read .ini file
-        config.read(iniLocation)
-
-        # reset to default values
-        config.set("Body and head", "bodyCheckVar", "True")
-        config.set('Body and head', 'csscheckvar', "False")
-        config.set('Body and head', 'javascriptcheckvar', "False")
-        config.set("Body and head", "pagetitleentrytext", "")
-        config.set("Heading IDs and nav", "headingsidvar", "True")
-        config.set("Heading IDs and nav", "navigationvar", "False")
-        config.set("Heading IDs and nav", "navigationtypevar", "paragraph")
-        config.set('Format templates', 'detectheadingsentry1', "FVMW Heading")
-        config.set('Format templates', 'detectheadingsentry2', "FVMW Heading2")
-        config.set('Format templates', 'detectheadingsentry3', "FVMW Heading3")
-        config.set('Format templates', 'detectimagesentry', "FVMW Image")
-        config.set('Format templates', 'imagesdimensionsentry', "")
-        config.set('Format templates', 'detectvideosentry', "FVMW Video")
-        config.set('Format templates', 'videosdimensionsentry', "")
-        config.set('Format templates', 'detectaudioentry', "FVMW Audio")
-        config.set('Format templates', 'detectMediaentry', "FVMW Media")
-        config.set('Format templates', 'detectblockquotesentry', "FVMW Blockquote")
-        config.set('Format templates', 'detecttablecaptionsentry', "FVMW TableCaption")
-        config.set('Format templates', 'detectbibliographyentry', "FVMW Bibliography")
-        config.set('Format templates', 'detectignorepnumentry', "FVMW IgnorePNum")
-        config.set('Format templates', 'detectcodeentry', "FVMW Code")
-        config.set('Format templates', 'customstylemap', "")
-        config.set('Tooltips', 'tooltipscheckvar', "True")
-        config.set('Tooltips', 'abbreviatetooltipsentry', "500")
-        config.set('Citability', 'paragraphnumbercheckvar', "True")
-        config.set('Citability', 'pagenumbercheckvar', "False")
-        config.set('Citability', 'pagenumberstartcheckvar', "1")
-
-        # write to file
-        with open(iniLocation, "w") as configFile:
-            config.write(configFile)
-
-        # update GUI with reset values
-        bodyCheckVar.set(True)
-        cssCheckVar.set("False")
-        cssCheck.configure(state="disabled")
-        javascriptCheckVar.set("False")
-        javascriptCheck.configure(state="disabled")
-        pageTitleEntryText.set("")
-        pageTitleEntry.configure(state="disabled")
-
-        headingsIDVar.set(True)
-        navigationVar.set(False)
-        navigationCheck.configure(state="normal")
-        navigationTypeVar.set("paragraph")
-        navigationPar.configure(state="disabled")
-        navigationBut.configure(state="disabled")
-
-        detectHeadingsEntry1Text.set("FVMW Heading")
-        detectHeadingsEntry2Text.set("FVMW Heading2")
-        detectHeadingsEntry3Text.set("FVMW Heading3")
-        detectImagesEntryText.set("FVMW Image")
-        imagesDimensionsEntryText.set("")
-        detectVideosEntryText.set("FVMW Video")
-        videosDimensionsEntryText.set("")
-        detectAudioEntryText.set("FVMW Audio")
-        detectMediaEntryText.set("FVMW Media")
-        detectBlockquotesEntryText.set("FVMW Blockquote")
-        detectTableCaptionsEntryText.set("FVMW TableCaption")
-        detectBibliographyEntryText.set("FVMW Bibliography")
-        detectIgnorePNumEntryText.set("FVMW IgnorePNum")
-        detectIgnorePNumEntry.configure(state="normal")
-        detectCodeEntryText.set("FVMW Code")
-        customStyleMapEntry.delete("1.0", "end")
-
-        tooltipsCheckVar.set(True)
-        abbreviateTooltipsEntryText.set("500")
-        abbreviateTooltipsEntry.configure(state="normal")
-
-        paragraphNumberCheckVar.set(True)
-        pageNumberCheckVar.set(False)
-        pageNumberStartCheckEntryText.set("1")
-        pageNumberStartCheckEntry.configure(state="disabled")
-
-        messagebox.showinfo("Reset successful", "Settings have been reset to original values.")
-
-    return
-
-
-## READ INI ON STARTUP
-# open .ini
+# .ini location
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) # get current location
 iniLocation = os.path.join(__location__, 'SciDocx2Web.ini')
 config = ConfigParser()
-config.read(iniLocation)
-
-# read .ini values
-conf_bodycheckvar = config.getboolean('Body and head', 'bodyCheckVar')
-conf_csscheckvar = config.getboolean('Body and head', 'csscheckvar')
-conf_javascriptcheckvar = config.getboolean('Body and head', 'javascriptcheckvar')
-conf_pagetitleentrytext = config.get('Body and head', 'pagetitleentrytext')
-conf_headingsidvar = config.getboolean('Heading IDs and nav', 'headingsidvar')
-conf_navigationvar = config.getboolean('Heading IDs and nav', 'navigationvar')
-conf_navigationtypevar = config.get('Heading IDs and nav', 'navigationtypevar')
-conf_detectheadingsentry1 = config.get('Format templates', 'detectheadingsentry1')
-conf_detectheadingsentry2 = config.get('Format templates', 'detectheadingsentry2')
-conf_detectheadingsentry3 = config.get('Format templates', 'detectheadingsentry3')
-conf_detectimagesentry = config.get('Format templates', 'detectimagesentry')
-conf_imagesdimensionsentry = config.get('Format templates', 'imagesdimensionsentry')
-conf_detectvideosentry = config.get('Format templates', 'detectvideosentry')
-conf_videosdimensionsentry = config.get('Format templates', 'videosdimensionsentry')
-conf_detectaudioentry = config.get('Format templates', 'detectaudioentry')
-conf_detectmediaentry = config.get('Format templates', 'detectMediaentry')
-conf_detectblockquotesentry = config.get('Format templates', 'detectblockquotesentry')
-conf_detecttablecaptionsentry = config.get('Format templates', 'detecttablecaptionsentry')
-conf_detectbibliographyentry = config.get('Format templates', 'detecbibliographyentry')
-conf_detectignorepnumentry = config.get('Format templates', 'detectignorepnumentry')
-conf_detectcodeentry = config.get('Format templates', 'detectcodeentry')
-conf_customstylemap = config.get('Format templates', 'customstylemap')
-conf_tooltipscheckvar = config.getboolean('Tooltips', 'tooltipscheckvar')
-conf_abbreviatetooltipsentry = config.get('Tooltips', 'abbreviatetooltipsentry')
-conf_paragraphnumbercheckvar = config.getboolean('Citability', 'paragraphnumbercheckvar')
-conf_pagenumbercheckvar = config.getboolean('Citability', 'pagenumbercheckvar')
-conf_pagenumberstartcheckvar = config.get('Citability', 'pagenumberstartcheckvar')
-
-## GUI SETUP
-# window
-window = tk.Tk()
-window.title('SciDocx2Web')
-window.resizable(False, False)
-
-# add scrollbar
-scrollCanvas = tk.Canvas(window, width=600, height=450)
-scrollCanvas.grid(row=3, column=0, columnspan=2, sticky="NEWS")
-
-scrollBar = ttk.Scrollbar(window, orient="vertical", command=scrollCanvas.yview)
-scrollBar.grid(row=3, column=2, sticky="NS")
-
-scrollCanvas.configure(yscrollcommand=scrollBar.set, scrollregion=scrollCanvas.bbox("all"))
-scrollCanvas.bind("<Configure>", lambda e: scrollCanvas.configure(scrollregion=scrollCanvas.bbox("all")))
-
-scrollSecondFrame = ttk.Frame(scrollCanvas, width=200, height=600)
-scrollSecondFrame.grid(row=0, column=0, sticky="NW")
-
-scrollCanvas.create_window((0,0), window=scrollSecondFrame, anchor="nw")
-
-scroll = 0
-
-def _on_mousewheel(event, scroll):
-    '''Makes the mouse wheel scroll the canvas.'''
-
-    if os.name == "nt":
-        scrollCanvas.yview_scroll(int(-1*(event.delta/120)), "units")
-    else:
-        scrollCanvas.yview_scroll(int(scroll), "units")
-
-    return
-
-if os.name == "nt":
-    scrollCanvas.bind_all("<MouseWheel>", fp(_on_mousewheel, scroll=0))
-else:
-    scrollCanvas.bind_all("<Button-4>", fp(_on_mousewheel, scroll=-1))
-    scrollCanvas.bind_all("<Button-5>", fp(_on_mousewheel, scroll=1))
-
-# variable used for counting up rows (makes it easier to rearrange the UI without having to manually update all values)
-row = 1
-
-# --Body and head settings--
-# frame
-frameBody = tk.LabelFrame(scrollSecondFrame, text='Body and head settings')
-frameBody.grid(sticky="W", row=row, column=0, pady=(20, 10), padx=(20,0))
-
-# "Only export the body?"
-bodyCheckVar = tk.BooleanVar(value=conf_bodycheckvar)
-exportBodyCheck = tk.Checkbutton(frameBody, text='Only export the body?',variable=bodyCheckVar, onvalue=True, offvalue=False, command=ablePageTitleAndCssAndJavascript)
-exportBodyCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-# "Add suggested css?"
-row += 1
-
-cssCheckVar = tk.BooleanVar(value=conf_csscheckvar)
-cssCheck = tk.Checkbutton(frameBody, text='Add suggested css?',variable=cssCheckVar, onvalue=True, offvalue=False, justify="left")
-if conf_bodycheckvar:
-    cssCheck.configure(state="disable")
-else:
-    cssCheck.configure(state="normal")
-cssCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-# "Add javascript to highlight navigation while scrolling?"
-row += 1
-
-javascriptCheckVar = tk.BooleanVar(value=conf_javascriptcheckvar)
-javascriptCheck = tk.Checkbutton(frameBody, text='Add javascript to highlight navigation while scrolling?',variable=javascriptCheckVar, onvalue=True, offvalue=False, justify="left")
-if conf_bodycheckvar:
-    javascriptCheck.configure(state="disable")
-else:
-    javascriptCheck.configure(state="normal")
-javascriptCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-# "Page title"
-row += 1
-
-pageTitleLabel = ttk.Label(frameBody, text='Page title:')
-pageTitleLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-pageTitleEntryText = tk.StringVar(value=conf_pagetitleentrytext)
-pageTitleEntry = tk.Entry(frameBody, textvariable=pageTitleEntryText)
-if conf_bodycheckvar:
-    pageTitleEntry.configure(state="disabled")
-else:
-    pageTitleEntry.configure(state="normal")
-pageTitleEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# --Navigation--
-row += 1
-
-# frame
-frameHeadingsNav = tk.LabelFrame(scrollSecondFrame, text='Navigation')
-frameHeadingsNav.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-# "Add IDs to headings?"
-headingsIDVar = tk.BooleanVar(value=conf_headingsidvar)
-headingsIDCheck = tk.Checkbutton(frameHeadingsNav, text='Add IDs to headings?',variable=headingsIDVar, onvalue=True, offvalue=False, command=ableNavigation)
-headingsIDCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-# "Create navigation?"
-navigationVar = tk.BooleanVar(value=conf_navigationvar)
-navigationCheck = tk.Checkbutton(frameHeadingsNav, text='Create navigation?',variable=navigationVar, onvalue=True, offvalue=False, command=ableNavigationElement)
-if conf_headingsidvar:
-    navigationCheck.configure(state="normal")
-else:
-    navigationCheck.configure(state="disabled")
-navigationCheck.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,0))
-
-# "Paragraph" + "Button" radio buttons
-navigationTypeVar = tk.StringVar(value=conf_navigationtypevar)
-
-navigationPar = tk.Radiobutton(frameHeadingsNav, text='Paragraph',variable=navigationTypeVar, value="paragraph")
-if conf_navigationvar:
-    navigationPar.configure(state="normal")
-else:
-    navigationPar.configure(state="disabled")
-navigationPar.grid(sticky="W", row=row, column=2, pady=(0, 0), padx=(20,20))
-
-row += 1
-
-navigationBut = tk.Radiobutton(frameHeadingsNav, text='Button',variable=navigationTypeVar, value="button")
-if conf_navigationvar:
-    navigationBut.configure(state="normal")
-else:
-    navigationBut.configure(state="disabled")
-navigationBut.grid(sticky="W", row=row, column=2, pady=(0, 10), padx=(20,20))
-
-# --Tooltips settings--
-# frame
-frameTooltips = tk.LabelFrame(scrollSecondFrame, text='Tooltip settings')
-frameTooltips.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
-# "Add tooltips to footnote?"
-row += 1
+class MainWindow(QMainWindow):
+    ### GUI SETUP ###
+    def __init__(self):
 
-tooltipsCheckVar = tk.BooleanVar(value=conf_tooltipscheckvar)
-tooltipsCheck = tk.Checkbutton(frameTooltips, text='Add tooltips to footnotes?',variable=tooltipsCheckVar, onvalue=True, offvalue=False, command=ableAbbreviateTooltips)
-tooltipsCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+        super().__init__()
 
-# "Abbreviate tooltips..."
-row += 1
+        # Locations
+        self.inputPath = None
+        self.outputPath = None
 
-abbreviateTooltipsLabel = tk.Label(frameTooltips, text='Abbreviate tooltips after how many symbols? Input a number.\nLeave empty to skip abbreviation.', justify="left")
-abbreviateTooltipsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+        # Colors for disabled and enabled UI elements
+        self.disabled_color = "gray"
+        self.enabled_color = "lightgray"
 
-abbreviateTooltipsEntryText = tk.StringVar(value=conf_abbreviatetooltipsentry)
-abbreviateTooltipsEntry = tk.Entry(frameTooltips, textvariable=abbreviateTooltipsEntryText)
-if conf_tooltipscheckvar:
-    abbreviateTooltipsEntry.configure(state="normal")
-else:
-    abbreviateTooltipsEntry.configure(state="disable")
-abbreviateTooltipsEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+        self.setWindowTitle('SciDocx2Web')
 
-# --Citability settings--
-# frame
-framePar = tk.LabelFrame(scrollSecondFrame, text='Citability settings')
-framePar.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+        # GUI Elements
+        # --Body and head settings--
+        label_body = QLabel('<font size=5>Body and head settings</font>')
+        self.check_body_only = QCheckBox('Only export the body?', self)
+        self.check_body_only.toggled.connect(lambda: self.presetChangedFunc("Export Body"))
 
-# "Number the paragraphs?"
-row += 1
+        self.check_css = QCheckBox('Add suggested css?', self)
 
-paragraphNumberCheckVar = tk.BooleanVar(value=conf_paragraphnumbercheckvar)
-paragraphNumberCheck = tk.Checkbutton(framePar, text='Number the paragraphs?',variable=paragraphNumberCheckVar, onvalue=True, offvalue=False, command=ableIgnorePNum)
-paragraphNumberCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,20))
+        self.check_javascript = QCheckBox('Add javascript to highlight navigation while scrolling?', self)
 
-row += 1
+        self.label_page_title = QLabel('Page title')
+        self.page_title = QLineEdit()
 
-pageNumberCheckVar = tk.BooleanVar(value=conf_pagenumbercheckvar)
-pageNumberCheck = tk.Checkbutton(framePar, text='Insert page numbers?',variable=pageNumberCheckVar, onvalue=True, offvalue=False, command=ablePageNum)
-pageNumberCheck.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,20))
+        # --Navigation--
+        label_navigation = QLabel('<font size=5>Navigation</font>')
+        self.add_IDs = QCheckBox('Add IDs to headings?', self)
+        self.add_IDs.toggled.connect(lambda: self.presetChangedFunc("Add IDs"))
 
-row += 1
+        self.create_nav = QCheckBox('Create navigation?', self)
+        self.create_nav.toggled.connect(lambda: self.presetChangedFunc("Create Navigation"))
 
-pageNumberStartCheckLabel = tk.Label(framePar, text='Which docx page should be counted as the first page?\nInput a number.', justify="left")
-pageNumberStartCheckLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+        self.navigationPar = QRadioButton('Paragraph', self.create_nav)
+        self.navigationBut = QRadioButton('Button', self.create_nav)
 
-pageNumberStartCheckEntryText = tk.StringVar(value=conf_pagenumberstartcheckvar)
-pageNumberStartCheckEntry = tk.Entry(framePar, textvariable=pageNumberStartCheckEntryText)
-if conf_pagenumbercheckvar:
-    pageNumberStartCheckEntry.configure(state="normal")
-else:
-    pageNumberStartCheckEntry.configure(state="disable")
-pageNumberStartCheckEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(25,20))
+        # --Tooltips settings--
+        label_tooltip = QLabel('<font size=5>Tooltip settings</font>')
+        self.add_tooltips = QCheckBox('Add tooltips to footnotes?', self)
+        self.add_tooltips.toggled.connect(lambda: self.presetChangedFunc("Add Tooltips"))
 
+        self.label_tooltip_abbreviate = QLabel('Abbreviate tooltips after how many symbols? Input a number.\nLeave empty to skip abbreviation.')
+        self.tooltip_abbreviate = QLineEdit()
 
-# --Format template detection--
-# frame
-frameDetection = tk.LabelFrame(scrollSecondFrame, text='Format template detection')
-frameDetection.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+        # --Citability settings--
+        label_citability = QLabel('<font size=5>Citability settings</font>')
+        self.number_paragraphs = QCheckBox('Number the paragraphs?', self)
+        self.number_paragraphs.toggled.connect(lambda: self.presetChangedFunc("Number Paragraphs"))
 
-# "Detect headings..."
-row += 1
+        self.insert_page_no = QCheckBox('Insert page numbers?', self)
+        self.insert_page_no.toggled.connect(lambda: self.presetChangedFunc("Insert Page"))
 
-detectHeadingsLabel = tk.Label(frameDetection, text='Detect 1. level headings (h1) by which format template name?\nLeave empty to skip detection.', justify="left")
-detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+        self.label_first_page = QLabel('Which docx page should be counted as the first page?\nInput a number.')
+        self.first_page = QLineEdit()
 
-detectHeadingsEntry1Text = tk.StringVar(value=conf_detectheadingsentry1)
-detectHeadingsEntry1 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry1Text)
-detectHeadingsEntry1.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+        # --Format template detection--
+        label_detect_templates = QLabel('<font size=5>Format template detection</font>')
+        label_detect_headings1 = QLabel('Detect 1. level headings (h1) by which format template name?\nLeave empty to skip detection.')
+        self.detect_headings1 = QLineEdit()
 
-row += 1
+        label_detect_headings2 = QLabel('Detect 2. level headings (h2) by which format template name?\nLeave empty to skip detection.')
+        self.detect_headings2 = QLineEdit()
 
-detectHeadingsLabel = tk.Label(frameDetection, text='Detect 2. level headings (h2) by which format template name?\nLeave empty to skip detection.', justify="left")
-detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+        label_detect_headings3 = QLabel('Detect 3. level headings (h3) by which format template name?\nLeave empty to skip detection.')
+        self.detect_headings3 = QLineEdit()
 
-detectHeadingsEntry2Text = tk.StringVar(value=conf_detectheadingsentry2)
-detectHeadingsEntry2 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry2Text)
-detectHeadingsEntry2.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
+        label_detect_images = QLabel('Detect image references by which format template name?\nLeave empty to skip detection.')
+        self.detect_images = QLineEdit()
 
-row += 1
+        label_images_dimensions = QLabel('Which dimensions should the image embed have?\nSeparate X and Y value with a comma (X,Y).\nLeave empty to use original dimensions.')
+        self.images_dimensions = QLineEdit()
 
-detectHeadingsLabel = tk.Label(frameDetection, text='Detect 3. level headings (h3) by which format template name?\nLeave empty to skip detection.', justify="left")
-detectHeadingsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
+        label_detect_videos = QLabel('Detect video references by which format template name?\nLeave empty to skip detection.')
+        self.detect_videos = QLineEdit()
+
+        label_video_dimensions = QLabel('Which dimensions should the video embed have?\nSeparate X and Y value with a comma (X,Y).\nLeave empty to use original dimensions.')
+        self.video_dimensions = QLineEdit()
+
+        label_detect_audio = QLabel('Detect audio references by which format template name?\nLeave empty to skip detection.')
+        self.detect_audio = QLineEdit()
+
+        label_detect_media = QLabel('Detect media captions by which format template name?\nLeave empty to skip detection.')
+        self.detect_media = QLineEdit()
+
+        label_detect_tables = QLabel('Detect table captions by which format template name?\nLeave empty to skip detection.')
+        self.detect_tables = QLineEdit()
+
+        label_detect_blockquotes = QLabel('Detect blockquotes by which format template name?\nLeave empty to skip detection.')
+        self.detect_blockquotes = QLineEdit()
+
+        label_detect_bibliography = QLabel('Detect bibliography captions by which format template name?\nLeave empty to skip detection.')
+        self.detect_bibliography = QLineEdit()
+
+        self.label_detect_ignore_pnum = QLabel('Detect paragraphs that should not be numbered by which format template name?\nLeave empty to skip detection.')
+        self.detect_ignore_pnum = QLineEdit()
+
+        label_detect_code = QLabel('Detect code paragraphs by which format template name?\nLeave empty to skip detection.')
+        self.detect_code = QLineEdit()
+
+        label_additional_styles = QLabel('Additional custom style map entries.')
+        self.additional_styles = QTextEdit()
+
+        # --File--
+        self.save_options = QPushButton('Save options')
+        self.save_options.clicked.connect(self.saveOptions)
+
+        self.reset_options = QPushButton('Reset options')
+        self.reset_options.clicked.connect(self.resetOptions)
+
+        self.browse = QPushButton('Browse input file')
+        self.browse.clicked.connect(self.inputPathFunc)
+
+        self.display_file_path = QLineEdit()
+        self.display_file_path.setAlignment(Qt.AlignHCenter)
+        self.display_file_path.setReadOnly(True)
+
+        self.convert = QPushButton('Convert')
+        self.convert.clicked.connect(self.submitFunc)
+
+        # Layout
+        self.container = QWidget()
+        self.scroll = QScrollArea()
+        layout = QVBoxLayout()
+
+        self.container.setLayout(layout)
+        
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidget(self.container)
+        
+        self.setGeometry(600, 100, 600, 900)
+
+        spacer = QSpacerItem(20, 20, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        
+        self.setCentralWidget(self.scroll)
+
+        layout.addWidget(label_body)
+        layout.addWidget(self.check_body_only)
+        layout.addWidget(self.check_css)
+        layout.addWidget(self.check_javascript)
+        layout.addWidget(self.label_page_title)
+        layout.addWidget(self.page_title)
+        layout.addItem(spacer)
+
+        layout.addWidget(label_navigation)
+        layout.addWidget(self.add_IDs)
+        layout.addWidget(self.create_nav)
+        layout.addWidget(self.navigationPar)
+        layout.addWidget(self.navigationBut)
+        layout.addItem(spacer)
+
+        layout.addWidget(label_tooltip)
+        layout.addWidget(self.add_tooltips)
+        layout.addWidget(self.label_tooltip_abbreviate)
+        layout.addWidget(self.tooltip_abbreviate)
+        layout.addItem(spacer)
+        
+        layout.addWidget(label_citability)
+        layout.addWidget(self.number_paragraphs)
+        layout.addWidget(self.insert_page_no)
+        layout.addWidget(self.label_first_page)
+        layout.addWidget(self.first_page)
+        layout.addItem(spacer)
+
+        layout.addWidget(label_detect_templates)
+        layout.addWidget(label_detect_headings1)
+        layout.addWidget(self.detect_headings1)
+        layout.addWidget(label_detect_headings2)
+        layout.addWidget(self.detect_headings2)
+        layout.addWidget(label_detect_headings3)
+        layout.addWidget(self.detect_headings3)
+        layout.addWidget(label_detect_images)
+        layout.addWidget(self.detect_images)
+        layout.addWidget(label_images_dimensions)
+        layout.addWidget(self.images_dimensions)
+        layout.addWidget(label_detect_videos)
+        layout.addWidget(self.detect_videos)
+        layout.addWidget(label_video_dimensions)
+        layout.addWidget(self.video_dimensions)
+        layout.addWidget(label_detect_audio)
+        layout.addWidget(self.detect_audio)
+        layout.addWidget(label_detect_media)
+        layout.addWidget(self.detect_media)
+        layout.addWidget(label_detect_tables)
+        layout.addWidget(self.detect_tables)
+        layout.addWidget(label_detect_blockquotes)
+        layout.addWidget(self.detect_blockquotes)
+        layout.addWidget(label_detect_bibliography)
+        layout.addWidget(self.detect_bibliography)
+        layout.addWidget(self.label_detect_ignore_pnum)
+        layout.addWidget(self.detect_ignore_pnum)
+        layout.addWidget(label_detect_code)
+        layout.addWidget(self.detect_code)
+        layout.addWidget(label_additional_styles)
+        layout.addWidget(self.additional_styles)
+        layout.addItem(spacer)
+        layout.addWidget(self.save_options)
+        layout.addWidget(self.reset_options)
+
+        # Docked file options at the bottom
+        self.container2 = QWidget()
+        layout2 = QVBoxLayout()
+        self.container2.setLayout(layout2)
+        
+        layout2.addWidget(self.browse)
+        layout2.addWidget(self.display_file_path)
+        layout2.addWidget(self.convert)
+
+        dock = QDockWidget(self)
+        dock.setAllowedAreas(Qt.DockWidgetArea.BottomDockWidgetArea)
+        dock.setWidget(self.container2)
+
+        self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, dock)
+
+        # Load values from .ini
+        self.readIni()
+
+        return
+        
+
+    ### FUNCTIONS ###
+    def readIni(self):
+        '''Load settings from .ini file at startup.'''
+        # open .ini
+        config.read(iniLocation)
+
+        # read .ini values
+        conf_bodycheckvar = config.getboolean('Body and head', 'bodyCheckVar')
+        conf_csscheckvar = config.getboolean('Body and head', 'csscheckvar')
+        conf_javascriptcheckvar = config.getboolean('Body and head', 'javascriptcheckvar')
+        conf_pagetitleentrytext = config.get('Body and head', 'pagetitleentrytext')
+        conf_headingsidvar = config.getboolean('Heading IDs and nav', 'headingsidvar')
+        conf_navigationvar = config.getboolean('Heading IDs and nav', 'navigationvar')
+        conf_navigationtypepar = config.getboolean('Heading IDs and nav', 'navigationtypepar')
+        conf_navigationtypebut = config.getboolean('Heading IDs and nav', 'navigationtypebut')
+        conf_tooltipscheckvar = config.getboolean('Tooltips', 'tooltipscheckvar')
+        conf_abbreviatetooltipsentry = config.get('Tooltips', 'abbreviatetooltipsentry')
+        conf_paragraphnumbercheckvar = config.getboolean('Citability', 'paragraphnumbercheckvar')
+        conf_pagenumbercheckvar = config.getboolean('Citability', 'pagenumbercheckvar')
+        conf_pagenumberstartcheckvar = config.get('Citability', 'pagenumberstartcheckvar')
+        conf_detectheadingsentry1 = config.get('Format templates', 'detectheadingsentry1')
+        conf_detectheadingsentry2 = config.get('Format templates', 'detectheadingsentry2')
+        conf_detectheadingsentry3 = config.get('Format templates', 'detectheadingsentry3')
+        conf_detectimagesentry = config.get('Format templates', 'detectimagesentry')
+        conf_imagesdimensionsentry = config.get('Format templates', 'imagesdimensionsentry')
+        conf_detectvideosentry = config.get('Format templates', 'detectvideosentry')
+        conf_videosdimensionsentry = config.get('Format templates', 'videosdimensionsentry')
+        conf_detectaudioentry = config.get('Format templates', 'detectaudioentry')
+        conf_detectmediaentry = config.get('Format templates', 'detectMediaentry')
+        conf_detectblockquotesentry = config.get('Format templates', 'detectblockquotesentry')
+        conf_detecttablecaptionsentry = config.get('Format templates', 'detecttablecaptionsentry')
+        conf_detectbibliographyentry = config.get('Format templates', 'detecbibliographyentry')
+        conf_detectignorepnumentry = config.get('Format templates', 'detectignorepnumentry')
+        conf_detectcodeentry = config.get('Format templates', 'detectcodeentry')
+        conf_customstylemap = config.get('Format templates', 'customstylemap')
+
+        # set fields to ini values
+        self.check_body_only.setChecked(conf_bodycheckvar)
+        self.check_css.setChecked(conf_csscheckvar)
+        self.check_javascript.setChecked(conf_javascriptcheckvar)
+        self.page_title.setText(conf_pagetitleentrytext)
+
+        self.add_IDs.setChecked(conf_headingsidvar)
+        self.create_nav.setChecked(conf_navigationvar)
+        self.navigationPar.setChecked(conf_navigationtypepar)
+        self.navigationBut.setChecked(conf_navigationtypebut)
+
+        self.add_tooltips.setChecked(conf_tooltipscheckvar)
+        self.tooltip_abbreviate.setText(conf_abbreviatetooltipsentry)
+
+        self.number_paragraphs.setChecked(conf_paragraphnumbercheckvar)
+        self.insert_page_no.setChecked(conf_pagenumbercheckvar)
+        self.first_page.setText(conf_pagenumberstartcheckvar)
+
+        self.detect_headings1.setText(conf_detectheadingsentry1)
+        self.detect_headings2.setText(conf_detectheadingsentry2)
+        self.detect_headings3.setText(conf_detectheadingsentry3)
+        self.detect_images.setText(conf_detectimagesentry)
+        self.images_dimensions.setText(conf_imagesdimensionsentry)
+        self.detect_videos.setText(conf_detectvideosentry)
+        self.video_dimensions.setText(conf_videosdimensionsentry)
+        self.detect_audio.setText(conf_detectaudioentry)
+        self.detect_media.setText(conf_detectmediaentry)
+        self.detect_tables.setText(conf_detectblockquotesentry)
+        self.detect_blockquotes.setText(conf_detecttablecaptionsentry)
+        self.detect_bibliography.setText(conf_detectbibliographyentry)
+        self.detect_ignore_pnum.setText(conf_detectignorepnumentry)
+        self.detect_code.setText(conf_detectcodeentry)
+        self.additional_styles.setText(conf_customstylemap)
+
+        # enable/disable fields based on loaded values
+        self.presetChangedFunc("Export Body")
+        self.presetChangedFunc("Add IDs")
+        self.presetChangedFunc("Create Navigation")
+        self.presetChangedFunc("Add Tooltips")
+        self.presetChangedFunc("Number Paragraphs")
+        self.presetChangedFunc("Insert Page")
+
+    def presetChangedFunc(self, name):
+        '''Enables or disables fields depending on what boxes are checked.
+        
+        Disables the "Page title" entry, "Add suggested css?" checkbox and "Add javascript to highlight navigation while scrolling?" checkbox if "Only export the body?" is checked. Does the opposite if it's unchecked.
+        
+        Disables the "Create navigation?" checkbox and the "Paragraph" and "Button" radio buttons if "Add IDs to headings?" is unchecked. Does the opposite if it's checked.
+        
+        Disables the "Paragraph" and "Button" radio buttons if "Create navigation?" is unchecked. Does the opposite if it's checked.
+        
+        Disables the "Abbreviate tooltips after how many symbols?" input field if "Add tooltips to footnotes?" is unchecked. Does the opposite if it's checked.
+        
+        Disables the "Detect paragraphs that should not be numbered..." input field if "Number the paragraphs?" is unchecked. Does the opposite if it's checked.
+        
+        Disables the "Which docx page should be counted..." input field if "Insert page numbers?" is unchecked. Does the opposite if it's checked.'''
+
+        if name == "Export Body":
+            # "Only export the body?" is checked: disable
+            if self.check_body_only.isChecked():
+                self.check_css.setCheckable(False)
+                self.check_css.setChecked(False)
+                self.check_css.setStyleSheet("color: " + self.disabled_color)
+                self.label_page_title.setStyleSheet("color: " + self.disabled_color)
+                self.page_title.setReadOnly(True)
+                self.page_title.setStyleSheet("color: " + self.disabled_color)
+                self.check_javascript.setCheckable(False)
+                self.check_javascript.setChecked(False)
+                self.check_javascript.setStyleSheet("color: " + self.disabled_color)
+            # enable
+            else:
+                self.check_css.setCheckable(True)
+                self.check_css.setStyleSheet("color: " + self.enabled_color)
+                self.page_title.setReadOnly(False)
+                self.label_page_title.setStyleSheet("color: " + self.enabled_color)
+                self.page_title.setStyleSheet("color: " + self.enabled_color)
+                self.check_javascript.setCheckable(True)
+                self.check_javascript.setStyleSheet("color: " + self.enabled_color)
+
+            return
+
+        if name == "Add IDs":
+            # "Add IDs to headings?" is checked: enable
+            if self.add_IDs.isChecked():
+                self.create_nav.setCheckable(True)
+                self.create_nav.setStyleSheet("color: " + self.enabled_color)
+            # disable
+            else:
+                self.create_nav.setCheckable(False)
+                self.create_nav.setStyleSheet("color: " + self.disabled_color)
+                self.navigationPar.setCheckable(False)
+                self.navigationPar.setStyleSheet("color: " + self.disabled_color)
+                self.navigationBut.setCheckable(False)
+                self.navigationBut.setStyleSheet("color: " + self.disabled_color)
+
+            return
+
+        if name == "Create Navigation":
+            # "Create navigation?" is checked: enable
+            if self.create_nav.isChecked():
+                self.navigationPar.setCheckable(True)
+                self.navigationPar.setStyleSheet("color: " + self.enabled_color)
+                self.navigationBut.setCheckable(True)
+                self.navigationBut.setStyleSheet("color: " + self.enabled_color)
+                # when this function is called from readIni(), the buttons would be reset instead of staying in the configuration saved in the .ini file without this if-check
+                if (self.navigationPar.isChecked() == False) and (self.navigationBut.isChecked() == False):
+                    self.navigationPar.setChecked(True)
+                    self.navigationBut.setChecked(False)
+            # disable
+            else:
+                self.navigationPar.setCheckable(False)
+                self.navigationPar.setStyleSheet("color: " + self.disabled_color)
+                self.navigationBut.setCheckable(False)
+                self.navigationBut.setStyleSheet("color: " + self.disabled_color)
+
+            return
+
+        if name == "Add Tooltips":
+            # "Add tooltips to footnotes?" is checked: enable
+            if self.add_tooltips.isChecked():
+                self.tooltip_abbreviate.setReadOnly(False)
+                self.tooltip_abbreviate.setStyleSheet("color: " + self.enabled_color)
+                self.label_tooltip_abbreviate.setStyleSheet("color: " + self.enabled_color)
+            # disable
+            else:
+                self.tooltip_abbreviate.setReadOnly(True)
+                self.tooltip_abbreviate.setStyleSheet("color: " + self.disabled_color)
+                self.label_tooltip_abbreviate.setStyleSheet("color: " + self.disabled_color)
+
+            return
+
+        if name == "Number Paragraphs":
+            # "Number the paragraphs?" is checked: enable
+            if self.number_paragraphs.isChecked():
+                self.label_detect_ignore_pnum.setStyleSheet("color: " + self.enabled_color)
+                self.detect_ignore_pnum.setStyleSheet("color: " + self.enabled_color)
+                self.detect_ignore_pnum.setReadOnly(False)
+            # disable
+            else:
+                self.label_detect_ignore_pnum.setStyleSheet("color: " + self.disabled_color)
+                self.detect_ignore_pnum.setStyleSheet("color: " + self.disabled_color)
+                self.detect_ignore_pnum.setReadOnly(True)
+
+            return
+
+        if name == "Insert Page":
+            # "Insert page numbers?" is checked: enable
+            if self.insert_page_no.isChecked():
+                self.label_first_page.setStyleSheet("color: " + self.enabled_color)
+                self.first_page.setStyleSheet("color: " + self.enabled_color)
+                self.first_page.setReadOnly(False)
+
+            # disable
+            else:
+                self.label_first_page.setStyleSheet("color: " + self.disabled_color)
+                self.first_page.setStyleSheet("color: " + self.disabled_color)
+                self.first_page.setReadOnly(True)
+
+            return
+
+    def saveOptions(self):
+        '''"Save options" button:
+    
+        Writes current settings to the INI file and display a message stating that settings has been saved successfully.'''
+
+        # read .ini file
+        config.read(iniLocation)
+
+        # set to new values
+        config.set("Body and head", "bodyCheckVar", str(self.check_body_only.isChecked()))
+        config.set('Body and head', 'csscheckvar', str(self.check_css.isChecked()))
+        config.set('Body and head', 'javascriptcheckvar', str(self.check_javascript.isChecked()))
+        config.set("Body and head", "pagetitleentrytext", self.page_title.text())
+        config.set("Heading IDs and nav", "headingsidvar", str(self.add_IDs.isChecked()))
+        config.set("Heading IDs and nav", "navigationvar", str(self.create_nav.isChecked()))
+        config.set("Heading IDs and nav", "navigationtypepar", str(self.navigationPar.isChecked()))
+        config.set("Heading IDs and nav", "navigationtypebut", str(self.navigationBut.isChecked()))
+        config.set('Tooltips', 'tooltipscheckvar', str(self.add_tooltips.isChecked()))
+        config.set('Tooltips', 'abbreviatetooltipsentry', self.tooltip_abbreviate.text())
+        config.set('Citability', 'paragraphnumbercheckvar', str(self.number_paragraphs.isChecked()))
+        config.set('Citability', 'pagenumbercheckvar', str(self.insert_page_no.isChecked()))
+        config.set('Citability', 'pagenumberstartcheckvar', str(self.first_page.text()))
+        config.set('Format templates', 'detectheadingsentry1', self.detect_headings1.text())
+        config.set('Format templates', 'detectheadingsentry2', self.detect_headings2.text())
+        config.set('Format templates', 'detectheadingsentry3', self.detect_headings3.text())
+        config.set('Format templates', 'detectimagesentry', self.detect_images.text())
+        config.set('Format templates', 'imagesdimensionsentry', self.images_dimensions.text())
+        config.set('Format templates', 'detectvideosentry', self.detect_videos.text())
+        config.set('Format templates', 'videosdimensionsentry', self.video_dimensions.text())
+        config.set('Format templates', 'detectaudioentry', self.detect_audio.text())
+        config.set('Format templates', 'detectMediaentry', self.detect_media.text())
+        config.set('Format templates', 'detecttablecaptionsentry', self.detect_tables.text())
+        config.set('Format templates', 'detectblockquotesentry', self.detect_blockquotes.text())
+        config.set('Format templates', 'detectbibliographyentry', self.detect_bibliography.text())
+        config.set('Format templates', 'detectignorepnumentry', self.detect_ignore_pnum.text())
+        config.set('Format templates', 'detectcodeentry', self.detect_code.text())
+        config.set('Format templates', 'customstylemap', self.additional_styles.toPlainText())
+
+        # write .ini file
+        with open(iniLocation, "w") as configFile:
+            config.write(configFile)
+
+        QMessageBox.information(self, "Saved", "Settings have been saved.")
+
+        return
+
+    def resetOptions(self):
+        '''"Reset options" button:
+    
+        Asks the user if they really want to reset the current options.
+
+        If yes: Resets options to their factory state. Updates the GUI, writes new settings to the INI file and displays a message stating that settings have been reset successfully.'''
+
+        reallyReset = QMessageBox.question(self, 'Reset options', 'Are you sure you want to reset the options to their factory settings? Current settings will be overwritten.', QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+
+        if reallyReset == QMessageBox.StandardButton.Yes:
+            # read .ini file
+            config.read(iniLocation)
+
+            # reset to default values
+            config.set("Body and head", "bodyCheckVar", "True")
+            config.set('Body and head', 'csscheckvar', "False")
+            config.set('Body and head', 'javascriptcheckvar', "False")
+            config.set("Body and head", "pagetitleentrytext", "")
+            config.set("Heading IDs and nav", "headingsidvar", "True")
+            config.set("Heading IDs and nav", "navigationvar", "False")
+            config.set("Heading IDs and nav", "navigationtypepar", "True")
+            config.set("Heading IDs and nav", "navigationtypebut", "False")
+            config.set('Format templates', 'detectheadingsentry1', "FVMW Heading")
+            config.set('Format templates', 'detectheadingsentry2', "FVMW Heading2")
+            config.set('Format templates', 'detectheadingsentry3', "FVMW Heading3")
+            config.set('Format templates', 'detectimagesentry', "FVMW Image")
+            config.set('Format templates', 'imagesdimensionsentry', "")
+            config.set('Format templates', 'detectvideosentry', "FVMW Video")
+            config.set('Format templates', 'videosdimensionsentry', "")
+            config.set('Format templates', 'detectaudioentry', "FVMW Audio")
+            config.set('Format templates', 'detectMediaentry', "FVMW Media")
+            config.set('Format templates', 'detectblockquotesentry', "FVMW Blockquote")
+            config.set('Format templates', 'detecttablecaptionsentry', "FVMW TableCaption")
+            config.set('Format templates', 'detectbibliographyentry', "FVMW Bibliography")
+            config.set('Format templates', 'detectignorepnumentry', "FVMW IgnorePNum")
+            config.set('Format templates', 'detectcodeentry', "FVMW Code")
+            config.set('Format templates', 'customstylemap', "")
+            config.set('Tooltips', 'tooltipscheckvar', "True")
+            config.set('Tooltips', 'abbreviatetooltipsentry', "500")
+            config.set('Citability', 'paragraphnumbercheckvar', "True")
+            config.set('Citability', 'pagenumbercheckvar', "False")
+            config.set('Citability', 'pagenumberstartcheckvar', "1")
+
+            # write to file
+            with open(iniLocation, "w") as configFile:
+                config.write(configFile)
+
+            # Update GUI with reset values. Disabled/enabled states will be updated automatically
+            self.check_body_only.setChecked(True)
+            self.check_css.setChecked(False)
+            self.check_javascript.setChecked(False)
+            self.page_title.clear()
+
+            self.add_IDs.setChecked(True)
+            self.create_nav.setChecked(False)
+            self.navigationPar.setChecked(True)
+            self.navigationBut.setChecked(False)
+
+            self.add_tooltips.setChecked(True)
+            self.tooltip_abbreviate.setText("500")
+
+            self.number_paragraphs.setChecked(True)
+            self.insert_page_no.setChecked(False)
+            self.first_page.setText("1")
+
+            self.detect_headings1.setText("FVMW Heading")
+            self.detect_headings2.setText("FVMW Heading2")
+            self.detect_headings3.setText("FVMW Heading3")
+            self.detect_images.setText("FVMW Image")
+            self.images_dimensions.setText("")
+            self.detect_videos.setText("FVMW Video")
+            self.video_dimensions.setText("")
+            self.detect_audio.setText("FVMW Audio")
+            self.detect_media.setText("FVMW Media")
+            self.detect_tables.setText("FVMW Blockquote")
+            self.detect_blockquotes.setText("FVMW TableCaption")
+            self.detect_bibliography.setText("FVMW Bibliography")
+            self.detect_ignore_pnum.setText("FVMW IgnorePNum")
+            self.detect_code.setText("FVMW Code")
+            self.additional_styles.clear()
+
+            QMessageBox.information(self, "Reset successful", "Settings have been reset to original values.")
+
+            return
+
+    def inputPathFunc(self):
+        '''"Browse" button:
+
+        Prompts the user to choose the file that shall be converted and replaces the input path field text with the path of the chosen file.'''
+
+        # delete current text in input field
+        self.display_file_path.clear()
+        
+        # get input path
+        self.inputPath = QFileDialog.getOpenFileName()[0]
+
+        # insert input path into field
+        if (self.inputPath != None) and (self.inputPath != ""):
+            self.display_file_path.setText(self.inputPath)
+            self.display_file_path.end(True) # scroll view to the right-most part of the path text
+
+        return
+
+    def submitFunc(self):
+        '''"Convert" button:
+
+        Prompts the user to choose the output path. Starts the conversion process by calling "convertAndExport()".\n
+        Throws an error if no input file has been chosen yet.'''
+
+        # get output path
+        self.outputPath = QFileDialog.getSaveFileName()[0]
+
+        # start conversion process
+        if self.inputPath != None:
+            if (self.outputPath != None) and (self.outputPath != ""):
+                self.convertAndExport()
+        else:
+            QMessageBox.warning(self, "No input file given", "Choose an input file.")
+
+        return
+
+    def convertAndExport(self):
+        '''Converts a DOCX file to an HTML file and exports it by calling functions from SciDocx2WebConversion.py. Displays a "Success" message if conversion was successful.'''
+
+        # style map
+        custom_style_map = SciConvert.style_map_func("", self.detect_headings1.text(), self.detect_headings2.text(), self.detect_headings3.text(), self.detect_images.text(), self.detect_videos.text(), self.detect_audio.text(), self.detect_media.text(), self.detect_blockquotes.text(), self.detect_tables.text(), self.detect_bibliography.text(), self.detect_ignore_pnum.text(), self.number_paragraphs.isChecked(), self.detect_code.text(), self.additional_styles.toPlainText())
+
+        # import and enclose input file with tags
+        input = mammoth.convert_to_html(self.inputPath, style_map=custom_style_map).value
+        bodyxml = SciConvert.enclose_body(input, self.check_body_only.isChecked(), self.page_title.text())
+
+        # remove unwanted links that the text processor adds
+        bodyxml = SciConvert.remove_empty_elements(bodyxml)
+
+        # create footnotes
+        footnotes = SciConvert.create_footnotes_list(bodyxml, self.tooltip_abbreviate.text())
+
+        # abbreviate footnotes
+        footnotesAbbr = SciConvert.abbreviate_footnotes(footnotes, self.tooltip_abbreviate.text())
+
+        # add wbr to footnotes
+        footnotesAbbr = SciConvert.add_wbr_footnotes(footnotesAbbr, self.tooltip_abbreviate.text())
+
+        # insert footnotes into main text
+        bodyxml = SciConvert.insert_footnotes(self.add_tooltips.isChecked(), bodyxml, footnotesAbbr)
+
+        # adjust footnote sups
+        bodyxml = SciConvert.adjust_footnotes(self.add_tooltips.isChecked(), bodyxml)
+
+        # separate bottom footnotes
+        commentBottomFootnotes = etree.Comment(' Bottom footnotes ')
+        breakElement = etree.XML('<br/>')
+        hrElement = etree.XML('<hr/>')
+        bodyxml = SciConvert.footnotes_bottom_adjust(bodyxml, commentBottomFootnotes, breakElement, hrElement)
+
+        # add wbr to main text
+        bodyxml = SciConvert.add_wbr_text(bodyxml)
+
+        # add heading IDs
+        bodyxml = SciConvert.add_Head_IDs(self.add_IDs.isChecked(), bodyxml)
+
+        # create navigation
+        findH1 = bodyxml.xpath('.//*[self::h1 or self::h2 or self::h3]')
+        navigationElement = etree.Element('nav')
+        commentNavigation = etree.Comment(' Navigation ')
+        h1Navigation = etree.Element('h1')
+        h1Navigation.text = 'Navigation'
+        navGridDiv = etree.Element('div')
+        navGridDiv.attrib['class'] = 'navGrid'
+        navGridDiv = SciConvert.create_navigation(self.create_nav.isChecked(), self.navigationPar.isChecked(), self.navigationBut.isChecked(), findH1, navigationElement, commentNavigation, h1Navigation, navGridDiv)
+
+        # add cite to blockquotes
+        tooltiptextPath = './/a[contains(@id, "footnote-ref")]/sup'
+        bodyxml = SciConvert.add_cite(tooltiptextPath, bodyxml, footnotes)
+
+        # embed images
+        bodyxml = SciConvert.embed_images(bodyxml, self.images_dimensions.text())
+
+        # embed videos
+        bodyxml = SciConvert.embed_videos(bodyxml, self.video_dimensions.text())
+
+        # embed audio
+        bodyxml = SciConvert.embed_audio(bodyxml)
+
+        # add file insertion messages above mediacaptions
+        bodyxml = SciConvert.file_insertion_message(bodyxml)
+
+        # move table captions
+        bodyxml = SciConvert.move_table_caption(bodyxml)
+
+        # create page breaks
+        bodyxml = SciConvert.page_breaks(self.insert_page_no.isChecked(), self.first_page.text(), bodyxml, self.check_body_only.isChecked())
+
+        # number paragraphs
+        bodyxml = SciConvert.paragraph_numbering(self.number_paragraphs.isChecked(), bodyxml)
+
+        # create sections (haven't been able to figure this out yet)
+        #bodyxml = SciConvert.create_sections(bodyxml)
+
+        # assemble file
+        exportableBodyxml = SciConvert.assemble_html(self.create_nav.isChecked(), self.check_body_only.isChecked(), self.check_css.isChecked(), cssXML, navGridDiv, bodyxml, javascriptXML, self.check_javascript.isChecked())
+
+        # unescape and escape HTML characters
+        exportableBodyxml = SciConvert.escape_unescape(exportableBodyxml)
+
+        # write file
+        SciConvert.write_html(exportableBodyxml, self.outputPath)
+
+        QMessageBox.information(self, "Success", "The file has been converted successfully.")
+
+        return
 
-detectHeadingsEntry3Text = tk.StringVar(value=conf_detectheadingsentry3)
-detectHeadingsEntry3 = tk.Entry(frameDetection, textvariable=detectHeadingsEntry3Text)
-detectHeadingsEntry3.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect image references..."
-row += 1
-
-detectImagesLabel = tk.Label(frameDetection, text='Detect image references by which format template name?\nLeave empty to skip detection.', justify="left")
-detectImagesLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectImagesEntryText = tk.StringVar(value=conf_detectimagesentry)
-detectImagesEntry = tk.Entry(frameDetection, textvariable=detectImagesEntryText)
-detectImagesEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-row += 1
-
-imagesDimensionsLabel = tk.Label(frameDetection, text='Which dimensions should the image embed have?\nSeparate X and Y value with a comma (X,Y).\nLeave empty to use original dimensions.', justify="left")
-imagesDimensionsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-imagesDimensionsEntryText = tk.StringVar(value=conf_imagesdimensionsentry)
-imagesDimensionsEntry = tk.Entry(frameDetection, textvariable=imagesDimensionsEntryText)
-imagesDimensionsEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect video references..."
-row += 1
-
-detectVideosLabel = tk.Label(frameDetection, text='Detect video references by which format template name?\nLeave empty to skip detection.', justify="left")
-detectVideosLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectVideosEntryText = tk.StringVar(value=conf_detectvideosentry)
-detectVideosEntry = tk.Entry(frameDetection, textvariable=detectVideosEntryText)
-detectVideosEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-row += 1
-
-videosDimensionsLabel = tk.Label(frameDetection, text='Which dimensions should the video embed have?\nSeparate X and Y value with a comma (X,Y).\nLeave empty to use original dimensions.', justify="left")
-videosDimensionsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-videosDimensionsEntryText = tk.StringVar(value=conf_videosdimensionsentry)
-videosDimensionsEntry = tk.Entry(frameDetection, textvariable=videosDimensionsEntryText)
-videosDimensionsEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect audio references..."
-row += 1
-
-detectAudioLabel = tk.Label(frameDetection, text='Detect audio references by which format template name?\nLeave empty to skip detection.', justify="left")
-detectAudioLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectAudioEntryText = tk.StringVar(value=conf_detectaudioentry)
-detectAudioEntry = tk.Entry(frameDetection, textvariable=detectAudioEntryText)
-detectAudioEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect media captions..."
-row += 1
-
-detectMediaLabel = tk.Label(frameDetection, text='Detect media captions by which format template name?\nLeave empty to skip detection.', justify="left")
-detectMediaLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectMediaEntryText = tk.StringVar(value=conf_detectmediaentry)
-detectMediaEntry = tk.Entry(frameDetection, textvariable=detectMediaEntryText)
-detectMediaEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect table captions..."
-row += 1
-
-detectTableCaptionsLabel = tk.Label(frameDetection, text='Detect table captions by which format template name?\nLeave empty to skip detection.', justify="left")
-detectTableCaptionsLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectTableCaptionsEntryText = tk.StringVar(value=conf_detecttablecaptionsentry)
-detectTableCaptionsEntry = tk.Entry(frameDetection, textvariable=detectTableCaptionsEntryText)
-detectTableCaptionsEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect blockquotes..."
-row += 1
-
-detectBlockquotesLabel = tk.Label(frameDetection, text='Detect blockquotes by which format template name?\nLeave empty to skip detection.', justify="left")
-detectBlockquotesLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectBlockquotesEntryText = tk.StringVar(value=conf_detectblockquotesentry)
-detectBlockquotesEntry = tk.Entry(frameDetection, textvariable=detectBlockquotesEntryText)
-detectBlockquotesEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect bibliography..."
-row += 1
-
-detectBibliographyLabel = tk.Label(frameDetection, text='Detect bibliography by which format template name?\nLeave empty to skip detection.', justify="left")
-detectBibliographyLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectBibliographyEntryText = tk.StringVar(value=conf_detectbibliographyentry)
-detectBibliographyEntry = tk.Entry(frameDetection, textvariable=detectBibliographyEntryText)
-detectBibliographyEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect paragraphs that should not be numbered..."
-row += 1
-
-detectIgnorePNumLabel =tk.Label(frameDetection, text='Detect paragraphs that should not be numbered by which\nformat template name?\nLeave empty to skip detection.', justify="left")
-detectIgnorePNumLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectIgnorePNumEntryText = tk.StringVar(value=conf_detectignorepnumentry)
-detectIgnorePNumEntry = tk.Entry(frameDetection, textvariable=detectIgnorePNumEntryText)
-if conf_paragraphnumbercheckvar:
-    detectIgnorePNumEntry.configure(state="normal")
-else:
-    detectIgnorePNumEntry.configure(state="disable")
-detectIgnorePNumEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Detect code..."
-row += 1
-
-detectCodeLabel =tk.Label(frameDetection, text='Detect code paragraphs by which format template name?\nLeave empty to skip detection.', justify="left")
-detectCodeLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-detectCodeEntryText = tk.StringVar(value=conf_detectcodeentry)
-detectCodeEntry = tk.Entry(frameDetection, textvariable=detectCodeEntryText)
-detectCodeEntry.grid(sticky="W", row=row, column=1, pady=(10, 10), padx=(20,20))
-
-# "Custom style map"
-row += 1
-
-customStyleMapLabel =tk.Label(frameDetection, text='Additional custom style map entries.', justify="left")
-customStyleMapLabel.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-row += 1
-
-customStyleMapEntryText = tk.StringVar(value=conf_customstylemap)
-customStyleMapEntry = scrolledtext.ScrolledText(frameDetection, width=60, height=20)
-customStyleMapEntry.insert('1.0', customStyleMapEntryText.get())
-customStyleMapEntry.grid(sticky="W", row=row, column=0, columnspan=2, pady=(10, 10), padx=(20,20))
-
-
-# SEPARATOR
-separator = ttk.Separator(window, orient='horizontal')
-separator.grid(sticky="EW", row=row, columnspan=2)
-
-# "Save options"
-row += 1
-
-resetButton = ttk.Button(window, text='Save options', command=saveOptions)
-resetButton.grid(sticky="W", row=row, column=0, pady=(20, 10), padx=(20,0))
-
-# "Reset options"
-resetButton = ttk.Button(window, text='Reset options', command=resetOptions)
-resetButton.grid(sticky="W", row=row, column=1, pady=(20, 10), padx=(20,0))
-
-# "Browse input file"
-row += 1
-
-inputPathButton = ttk.Button(window, text='Browse input file', command=inputPathFunc)
-inputPathButton.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
-
-inputPathEntry = tk.Entry(window)
-inputPathEntry.grid(sticky="NSEW", row=row, column=1, pady=(10, 10), padx=(20,0))
-inputPathEntry.config(state="disabled", justify="center")
-window.grid_columnconfigure(1, weight=1)
-
-# "Convert"
-row += 1
-
-submitButton = ttk.Button(window, text='Convert', command=submitFunc)
-submitButton.grid(sticky="W", row=row, column=0, pady=(10, 10), padx=(20,0))
 
 
 ### CSS ###
@@ -879,98 +867,10 @@ window.addEventListener('load', () => {
 """
 javascriptXML = etree.fromstring(javascript)
 
-
-### CONVERT ###
-def convertAndExport():
-    '''Converts a DOCX file to an HTML file and exports it by calling functions from SciDocx2WebConversion.py. Displays a "Success" message if conversion was successful.'''
-
-    # style map
-    custom_style_map = SciConvert.style_map_func("", detectHeadingsEntry1.get(), detectHeadingsEntry2.get(), detectHeadingsEntry3.get(), detectImagesEntry.get(), detectVideosEntry.get(), detectAudioEntry.get(), detectMediaEntry.get(), detectBlockquotesEntry.get(), detectTableCaptionsEntry.get(), detectBibliographyEntry.get(), detectIgnorePNumEntry.get(), paragraphNumberCheckVar.get(), detectCodeEntry.get(), customStyleMapEntry.get('1.0', 'end'))
-
-    # import and enclose input file with tags
-    input = mammoth.convert_to_html(inputPath, style_map=custom_style_map).value
-    bodyxml = SciConvert.enclose_body(input, bodyCheckVar.get(), pageTitleEntry.get())
-
-    # remove unwanted links that the text processor adds
-    bodyxml = SciConvert.remove_empty_elements(bodyxml)
-
-    # create footnotes
-    footnotes = SciConvert.create_footnotes_list(bodyxml, abbreviateTooltipsEntry.get())
-
-    # abbreviate footnotes
-    footnotesAbbr = SciConvert.abbreviate_footnotes(footnotes, abbreviateTooltipsEntry.get())
-
-    # add wbr to footnotes
-    footnotesAbbr = SciConvert.add_wbr_footnotes(footnotesAbbr, abbreviateTooltipsEntry.get())
-
-    # insert footnotes into main text
-    bodyxml = SciConvert.insert_footnotes(tooltipsCheckVar.get(), bodyxml, footnotesAbbr)
-
-    # adjust footnote sups
-    bodyxml = SciConvert.adjust_footnotes(tooltipsCheckVar.get(), bodyxml)
-
-    # separate bottom footnotes
-    commentBottomFootnotes = etree.Comment(' Bottom footnotes ')
-    breakElement = etree.XML('<br/>')
-    hrElement = etree.XML('<hr/>')
-    bodyxml = SciConvert.footnotes_bottom_adjust(bodyxml, commentBottomFootnotes, breakElement, hrElement)
-
-    # add wbr to main text
-    bodyxml = SciConvert.add_wbr_text(bodyxml)
-
-    # add heading IDs
-    bodyxml = SciConvert.add_Head_IDs(headingsIDVar.get(), bodyxml)
-
-    # create navigation
-    findH1 = bodyxml.xpath('.//*[self::h1 or self::h2 or self::h3]')
-    navigationElement = etree.Element('nav')
-    commentNavigation = etree.Comment(' Navigation ')
-    h1Navigation = etree.Element('h1')
-    h1Navigation.text = 'Navigation'
-    navGridDiv = etree.Element('div')
-    navGridDiv.attrib['class'] = 'navGrid'
-    navGridDiv = SciConvert.create_navigation(navigationVar.get(), navigationTypeVar.get(), findH1, navigationElement, commentNavigation, h1Navigation, navGridDiv)
-
-    # add cite to blockquotes
-    tooltiptextPath = './/a[contains(@id, "footnote-ref")]/sup'
-    bodyxml = SciConvert.add_cite(tooltiptextPath, bodyxml, footnotes)
-
-    # embed images
-    bodyxml = SciConvert.embed_images(bodyxml, imagesDimensionsEntry.get())
-
-    # embed videos
-    bodyxml = SciConvert.embed_videos(bodyxml, videosDimensionsEntry.get())
-
-    # embed audio
-    bodyxml = SciConvert.embed_audio(bodyxml)
-
-    # add file insertion messages above mediacaptions
-    bodyxml = SciConvert.file_insertion_message(bodyxml)
-
-    # move table captions
-    bodyxml = SciConvert.move_table_caption(bodyxml)
-
-    # create page breaks
-    bodyxml = SciConvert.page_breaks(pageNumberCheckVar.get(), pageNumberStartCheckEntry.get(), bodyxml, bodyCheckVar.get())
-
-    # number paragraphs
-    bodyxml = SciConvert.paragraph_numbering(paragraphNumberCheckVar.get(), bodyxml)
-
-    # create sections (haven't been able to figure this out yet)
-    #bodyxml = SciConvert.create_sections(bodyxml)
-
-    # assemble file
-    exportableBodyxml = SciConvert.assemble_html(navigationVar.get(), bodyCheckVar.get(), cssCheckVar.get(), cssXML, navGridDiv, bodyxml, javascriptXML, javascriptCheckVar.get())
-
-    # unescape and escape HTML characters
-    exportableBodyxml = SciConvert.escape_unescape(exportableBodyxml)
-
-    # write file
-    SciConvert.write_html(exportableBodyxml, outputPath)
-
-    messagebox.showinfo("Success", "The file has been converted successfully.")
-
-    return
-
 ### CREATE GUI WINDOW ###
-window.mainloop()
+app = QApplication()
+
+window = MainWindow()
+window.show()
+
+app.exec()
