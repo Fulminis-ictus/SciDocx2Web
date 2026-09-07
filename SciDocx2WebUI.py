@@ -21,6 +21,7 @@ import SciDocx2WebConversion as SciConvert # Handles this tool's conversion
 
 # Path
 import os.path
+import sys
 
 # GUI
 from PySide6.QtWidgets import QCheckBox, QLabel, QLineEdit, QRadioButton, QTextEdit, QMainWindow, QApplication, QPushButton, QWidget, QVBoxLayout, QSpacerItem, QSizePolicy, QScrollArea, QMessageBox, QFileDialog, QDockWidget, QListWidget
@@ -29,9 +30,8 @@ from PySide6.QtCore import Qt
 # Saving settings to and loading them from .ini
 from configparser import ConfigParser
 
-# .ini location
-__location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__))) # get current location
-iniLocation = os.path.join(__location__, 'SciDocx2Web.ini')
+# .ini
+iniLocation = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'SciDocx2Web.ini')
 config = ConfigParser()
 
 class MainWindow(QMainWindow):
