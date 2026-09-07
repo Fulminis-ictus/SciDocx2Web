@@ -1,0 +1,1001 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SciDocx2WebUI &mdash; SciDocx2Web 1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=61243dd2"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SciDocx2Web
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">SciDocx2Web</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SciDocx2Web</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">SciDocx2WebUI</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for SciDocx2WebUI</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""</span>
+<span class="sd">Convert scientific papers in DOCX format to HTML. See this project's GitHub page for more info: https://github.com/Fulminis-ictus/SciDocx2Web</span>
+
+<span class="sd">This module displays the GUI and calls SciDocx2WebConversion to start the actual conversion process.</span>
+
+<span class="sd">Documentation last updated: 2026.09.06\n</span>
+<span class="sd">Author: Tim Reichert\n</span>
+<span class="sd">Version: 1.2</span>
+
+<span class="sd">Uses and is dependent on Mammoth: https://github.com/mwilliamson/python-mammoth\n</span>
+<span class="sd">Makes use of dwasyl's added page break detection functionailty: https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4</span>
+
+<span class="sd">This version of the program is built using Python 3.13.15, Mammoth 1.12.1 and lxml 6.1.3. Using other versions can result in errors, such as missing text.</span>
+<span class="sd">"""</span>
+
+<span class="c1">### IMPORTS ###</span>
+<span class="c1"># Extraction and Conversion modules</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">mammoth</span> <span class="c1"># Convert docx to html</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lxml</span><span class="w"> </span><span class="kn">import</span> <span class="n">etree</span> <span class="c1"># XML and XPath</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">SciDocx2WebConversion</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">SciConvert</span> <span class="c1"># Handles this tool's conversion</span>
+
+<span class="c1"># Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os.path</span>
+
+<span class="c1"># GUI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PySide6.QtWidgets</span><span class="w"> </span><span class="kn">import</span> <span class="n">QCheckBox</span><span class="p">,</span> <span class="n">QLabel</span><span class="p">,</span> <span class="n">QLineEdit</span><span class="p">,</span> <span class="n">QRadioButton</span><span class="p">,</span> <span class="n">QTextEdit</span><span class="p">,</span> <span class="n">QMainWindow</span><span class="p">,</span> <span class="n">QApplication</span><span class="p">,</span> <span class="n">QPushButton</span><span class="p">,</span> <span class="n">QWidget</span><span class="p">,</span> <span class="n">QVBoxLayout</span><span class="p">,</span> <span class="n">QSpacerItem</span><span class="p">,</span> <span class="n">QSizePolicy</span><span class="p">,</span> <span class="n">QScrollArea</span><span class="p">,</span> <span class="n">QMessageBox</span><span class="p">,</span> <span class="n">QFileDialog</span><span class="p">,</span> <span class="n">QDockWidget</span><span class="p">,</span> <span class="n">QListWidget</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PySide6.QtCore</span><span class="w"> </span><span class="kn">import</span> <span class="n">Qt</span>
+
+<span class="c1"># Saving settings to and loading them from .ini</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">configparser</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigParser</span>
+
+<span class="c1"># .ini location</span>
+<span class="n">__location__</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))</span> <span class="c1"># get current location</span>
+<span class="n">iniLocation</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">__location__</span><span class="p">,</span> <span class="s1">'SciDocx2Web.ini'</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">ConfigParser</span><span class="p">()</span>
+
+<div class="viewcode-block" id="MainWindow">
+<a class="viewcode-back" href="../SciDocx2WebUI.html#SciDocx2WebUI.MainWindow">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MainWindow</span><span class="p">(</span><span class="n">QMainWindow</span><span class="p">):</span>
+    <span class="c1">### GUI SETUP ###</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1"># Locations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputPath</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputPath</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Colors for disabled and enabled UI elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span> <span class="o">=</span> <span class="s2">"gray"</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span> <span class="o">=</span> <span class="s2">"lightgray"</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s1">'SciDocx2Web'</span><span class="p">)</span>
+
+        <span class="c1"># GUI Elements</span>
+        <span class="c1"># --Body and head settings--</span>
+        <span class="n">label_body</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'&lt;font size=5&gt;Body and head settings&lt;/font&gt;'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_body_only</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="s1">'Only export the body?'</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_body_only</span><span class="o">.</span><span class="n">toggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Export Body"</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_css</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="s1">'Add suggested css?'</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_javascript</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="s1">'Add javascript to highlight navigation while scrolling?'</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_page_title</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Page title'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">page_title</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="c1"># --Navigation--</span>
+        <span class="n">label_navigation</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'&lt;font size=5&gt;Navigation&lt;/font&gt;'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_IDs</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="s1">'Add IDs to headings?'</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_IDs</span><span class="o">.</span><span class="n">toggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Add IDs"</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="s1">'Create navigation?'</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="o">.</span><span class="n">toggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Create Navigation"</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span> <span class="o">=</span> <span class="n">QRadioButton</span><span class="p">(</span><span class="s1">'Paragraph'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span> <span class="o">=</span> <span class="n">QRadioButton</span><span class="p">(</span><span class="s1">'Button'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="p">)</span>
+
+        <span class="c1"># --Tooltips settings--</span>
+        <span class="n">label_tooltip</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'&lt;font size=5&gt;Tooltip settings&lt;/font&gt;'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_tooltips</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="s1">'Add tooltips to footnotes?'</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_tooltips</span><span class="o">.</span><span class="n">toggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Add Tooltips"</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_tooltip_abbreviate</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Abbreviate tooltips after how many symbols? Input a number.</span><span class="se">\n</span><span class="s1">Leave empty to skip abbreviation.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="c1"># --Citability settings--</span>
+        <span class="n">label_citability</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'&lt;font size=5&gt;Citability settings&lt;/font&gt;'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_paragraphs</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="s1">'Number the paragraphs?'</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_paragraphs</span><span class="o">.</span><span class="n">toggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Number Paragraphs"</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">insert_page_no</span> <span class="o">=</span> <span class="n">QCheckBox</span><span class="p">(</span><span class="s1">'Insert page numbers?'</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insert_page_no</span><span class="o">.</span><span class="n">toggled</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Insert Page"</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_first_page</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Which docx page should be counted as the first page?</span><span class="se">\n</span><span class="s1">Input a number.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_page</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="c1"># --Format template detection--</span>
+        <span class="n">label_detect_templates</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'&lt;font size=5&gt;Format template detection&lt;/font&gt;'</span><span class="p">)</span>
+        <span class="n">label_detect_headings1</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect 1. level headings (h1) by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings1</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_detect_headings2</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect 2. level headings (h2) by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings2</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_detect_headings3</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect 3. level headings (h3) by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings3</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_detect_images</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect image references by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_images</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_images_dimensions</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Which dimensions should the image embed have?</span><span class="se">\n</span><span class="s1">Separate X and Y value with a comma (X,Y).</span><span class="se">\n</span><span class="s1">Leave empty to use original dimensions.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">images_dimensions</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_detect_videos</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect video references by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_videos</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_video_dimensions</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Which dimensions should the video embed have?</span><span class="se">\n</span><span class="s1">Separate X and Y value with a comma (X,Y).</span><span class="se">\n</span><span class="s1">Leave empty to use original dimensions.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_dimensions</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_detect_audio</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect audio references by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_audio</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_detect_media</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect media captions by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_media</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_detect_tables</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect table captions by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_tables</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_detect_blockquotes</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect blockquotes by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_blockquotes</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_detect_bibliography</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect bibliography captions by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_bibliography</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_detect_ignore_pnum</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect paragraphs that should not be numbered by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_ignore_pnum</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_detect_code</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Detect code paragraphs by which format template name?</span><span class="se">\n</span><span class="s1">Leave empty to skip detection.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_code</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+
+        <span class="n">label_additional_styles</span> <span class="o">=</span> <span class="n">QLabel</span><span class="p">(</span><span class="s1">'Additional custom style map entries.'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">additional_styles</span> <span class="o">=</span> <span class="n">QTextEdit</span><span class="p">()</span>
+
+        <span class="c1"># --File--</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_options</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s1">'Save options'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_options</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saveOptions</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_options</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s1">'Reset options'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_options</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">resetOptions</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">browse</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s1">'Browse input file'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">browse</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputPathFunc</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_file_path</span> <span class="o">=</span> <span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_file_path</span><span class="o">.</span><span class="n">setAlignment</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignHCenter</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_file_path</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">convert</span> <span class="o">=</span> <span class="n">QPushButton</span><span class="p">(</span><span class="s1">'Convert'</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submitFunc</span><span class="p">)</span>
+
+        <span class="c1"># Layout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scroll</span> <span class="o">=</span> <span class="n">QScrollArea</span><span class="p">()</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">scroll</span><span class="o">.</span><span class="n">setVerticalScrollBarPolicy</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ScrollBarAlwaysOn</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scroll</span><span class="o">.</span><span class="n">setHorizontalScrollBarPolicy</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">ScrollBarAlwaysOff</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scroll</span><span class="o">.</span><span class="n">setWidgetResizable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scroll</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="mi">600</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">900</span><span class="p">)</span>
+
+        <span class="n">spacer</span> <span class="o">=</span> <span class="n">QSpacerItem</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Fixed</span><span class="p">,</span> <span class="n">QSizePolicy</span><span class="o">.</span><span class="n">Fixed</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">setCentralWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scroll</span><span class="p">)</span>
+
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_body</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check_body_only</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check_css</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check_javascript</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_page_title</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">page_title</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">spacer</span><span class="p">)</span>
+
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_navigation</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_IDs</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">spacer</span><span class="p">)</span>
+
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_tooltip</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_tooltips</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_tooltip_abbreviate</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">spacer</span><span class="p">)</span>
+        
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_citability</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_paragraphs</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">insert_page_no</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_first_page</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_page</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">spacer</span><span class="p">)</span>
+
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_templates</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_headings1</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_headings1</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_headings2</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_headings2</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_headings3</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_headings3</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_images</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_images</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_images_dimensions</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images_dimensions</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_videos</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_videos</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_video_dimensions</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video_dimensions</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_audio</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_audio</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_media</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_media</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_tables</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_tables</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_blockquotes</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_blockquotes</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_bibliography</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_bibliography</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">label_detect_ignore_pnum</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_ignore_pnum</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_detect_code</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">detect_code</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">label_additional_styles</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">additional_styles</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">spacer</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">save_options</span><span class="p">)</span>
+        <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reset_options</span><span class="p">)</span>
+
+        <span class="c1"># Docked file options at the bottom</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">container2</span> <span class="o">=</span> <span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">layout2</span> <span class="o">=</span> <span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">container2</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">layout2</span><span class="p">)</span>
+        
+        <span class="n">layout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">browse</span><span class="p">)</span>
+        <span class="n">layout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">display_file_path</span><span class="p">)</span>
+        <span class="n">layout2</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">)</span>
+
+        <span class="n">dock</span> <span class="o">=</span> <span class="n">QDockWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">dock</span><span class="o">.</span><span class="n">setAllowedAreas</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">DockWidgetArea</span><span class="o">.</span><span class="n">BottomDockWidgetArea</span><span class="p">)</span>
+        <span class="n">dock</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">container2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">addDockWidget</span><span class="p">(</span><span class="n">Qt</span><span class="o">.</span><span class="n">DockWidgetArea</span><span class="o">.</span><span class="n">BottomDockWidgetArea</span><span class="p">,</span> <span class="n">dock</span><span class="p">)</span>
+
+        <span class="c1"># Load values from .ini</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">readIni</span><span class="p">()</span>
+
+        <span class="k">return</span>
+        
+
+    <span class="c1">### FUNCTIONS ###</span>
+<div class="viewcode-block" id="MainWindow.readIni">
+<a class="viewcode-back" href="../SciDocx2WebUI.html#SciDocx2WebUI.MainWindow.readIni">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">readIni</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">'''Load settings from .ini file at startup.'''</span>
+        <span class="c1"># open .ini</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">iniLocation</span><span class="p">)</span>
+
+        <span class="c1"># read .ini values</span>
+        <span class="n">conf_bodycheckvar</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">'Body and head'</span><span class="p">,</span> <span class="s1">'bodyCheckVar'</span><span class="p">)</span>
+        <span class="n">conf_csscheckvar</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">'Body and head'</span><span class="p">,</span> <span class="s1">'csscheckvar'</span><span class="p">)</span>
+        <span class="n">conf_javascriptcheckvar</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">'Body and head'</span><span class="p">,</span> <span class="s1">'javascriptcheckvar'</span><span class="p">)</span>
+        <span class="n">conf_pagetitleentrytext</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Body and head'</span><span class="p">,</span> <span class="s1">'pagetitleentrytext'</span><span class="p">)</span>
+        <span class="n">conf_headingsidvar</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">'Heading IDs and nav'</span><span class="p">,</span> <span class="s1">'headingsidvar'</span><span class="p">)</span>
+        <span class="n">conf_navigationvar</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">'Heading IDs and nav'</span><span class="p">,</span> <span class="s1">'navigationvar'</span><span class="p">)</span>
+        <span class="n">conf_navigationtypepar</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">'Heading IDs and nav'</span><span class="p">,</span> <span class="s1">'navigationtypepar'</span><span class="p">)</span>
+        <span class="n">conf_navigationtypebut</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">'Heading IDs and nav'</span><span class="p">,</span> <span class="s1">'navigationtypebut'</span><span class="p">)</span>
+        <span class="n">conf_tooltipscheckvar</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">'Tooltips'</span><span class="p">,</span> <span class="s1">'tooltipscheckvar'</span><span class="p">)</span>
+        <span class="n">conf_abbreviatetooltipsentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Tooltips'</span><span class="p">,</span> <span class="s1">'abbreviatetooltipsentry'</span><span class="p">)</span>
+        <span class="n">conf_paragraphnumbercheckvar</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">'Citability'</span><span class="p">,</span> <span class="s1">'paragraphnumbercheckvar'</span><span class="p">)</span>
+        <span class="n">conf_pagenumbercheckvar</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">getboolean</span><span class="p">(</span><span class="s1">'Citability'</span><span class="p">,</span> <span class="s1">'pagenumbercheckvar'</span><span class="p">)</span>
+        <span class="n">conf_pagenumberstartcheckvar</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Citability'</span><span class="p">,</span> <span class="s1">'pagenumberstartcheckvar'</span><span class="p">)</span>
+        <span class="n">conf_detectheadingsentry1</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectheadingsentry1'</span><span class="p">)</span>
+        <span class="n">conf_detectheadingsentry2</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectheadingsentry2'</span><span class="p">)</span>
+        <span class="n">conf_detectheadingsentry3</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectheadingsentry3'</span><span class="p">)</span>
+        <span class="n">conf_detectimagesentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectimagesentry'</span><span class="p">)</span>
+        <span class="n">conf_imagesdimensionsentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'imagesdimensionsentry'</span><span class="p">)</span>
+        <span class="n">conf_detectvideosentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectvideosentry'</span><span class="p">)</span>
+        <span class="n">conf_videosdimensionsentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'videosdimensionsentry'</span><span class="p">)</span>
+        <span class="n">conf_detectaudioentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectaudioentry'</span><span class="p">)</span>
+        <span class="n">conf_detectmediaentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectMediaentry'</span><span class="p">)</span>
+        <span class="n">conf_detectblockquotesentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectblockquotesentry'</span><span class="p">)</span>
+        <span class="n">conf_detecttablecaptionsentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detecttablecaptionsentry'</span><span class="p">)</span>
+        <span class="n">conf_detectbibliographyentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detecbibliographyentry'</span><span class="p">)</span>
+        <span class="n">conf_detectignorepnumentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectignorepnumentry'</span><span class="p">)</span>
+        <span class="n">conf_detectcodeentry</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectcodeentry'</span><span class="p">)</span>
+        <span class="n">conf_customstylemap</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'customstylemap'</span><span class="p">)</span>
+
+        <span class="c1"># set fields to ini values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_body_only</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">conf_bodycheckvar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_css</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">conf_csscheckvar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_javascript</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">conf_javascriptcheckvar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">page_title</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_pagetitleentrytext</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_IDs</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">conf_headingsidvar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">conf_navigationvar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">conf_navigationtypepar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">conf_navigationtypebut</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_tooltips</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">conf_tooltipscheckvar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_abbreviatetooltipsentry</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">number_paragraphs</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">conf_paragraphnumbercheckvar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insert_page_no</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">conf_pagenumbercheckvar</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">first_page</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_pagenumberstartcheckvar</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings1</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detectheadingsentry1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings2</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detectheadingsentry2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings3</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detectheadingsentry3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_images</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detectimagesentry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">images_dimensions</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_imagesdimensionsentry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_videos</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detectvideosentry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_dimensions</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_videosdimensionsentry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_audio</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detectaudioentry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_media</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detectmediaentry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_tables</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detectblockquotesentry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_blockquotes</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detecttablecaptionsentry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_bibliography</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detectbibliographyentry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_ignore_pnum</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detectignorepnumentry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detect_code</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_detectcodeentry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">additional_styles</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">conf_customstylemap</span><span class="p">)</span>
+
+        <span class="c1"># enable/disable fields based on loaded values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Export Body"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Add IDs"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Create Navigation"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Add Tooltips"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Number Paragraphs"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">presetChangedFunc</span><span class="p">(</span><span class="s2">"Insert Page"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MainWindow.presetChangedFunc">
+<a class="viewcode-back" href="../SciDocx2WebUI.html#SciDocx2WebUI.MainWindow.presetChangedFunc">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">presetChangedFunc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">'''Enables or disables fields depending on what boxes are checked.</span>
+<span class="sd">        </span>
+<span class="sd">        Disables the "Page title" entry, "Add suggested css?" checkbox and "Add javascript to highlight navigation while scrolling?" checkbox if "Only export the body?" is checked. Does the opposite if it's unchecked.</span>
+<span class="sd">        </span>
+<span class="sd">        Disables the "Create navigation?" checkbox and the "Paragraph" and "Button" radio buttons if "Add IDs to headings?" is unchecked. Does the opposite if it's checked.</span>
+<span class="sd">        </span>
+<span class="sd">        Disables the "Paragraph" and "Button" radio buttons if "Create navigation?" is unchecked. Does the opposite if it's checked.</span>
+<span class="sd">        </span>
+<span class="sd">        Disables the "Abbreviate tooltips after how many symbols?" input field if "Add tooltips to footnotes?" is unchecked. Does the opposite if it's checked.</span>
+<span class="sd">        </span>
+<span class="sd">        Disables the "Detect paragraphs that should not be numbered..." input field if "Number the paragraphs?" is unchecked. Does the opposite if it's checked.</span>
+<span class="sd">        </span>
+<span class="sd">        Disables the "Which docx page should be counted..." input field if "Insert page numbers?" is unchecked. Does the opposite if it's checked.'''</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"Export Body"</span><span class="p">:</span>
+            <span class="c1"># "Only export the body?" is checked: disable</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_body_only</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_css</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_css</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_css</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">label_page_title</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">page_title</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">page_title</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_javascript</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_javascript</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_javascript</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+            <span class="c1"># enable</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_css</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_css</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">page_title</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">label_page_title</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">page_title</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_javascript</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_javascript</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"Add IDs"</span><span class="p">:</span>
+            <span class="c1"># "Add IDs to headings?" is checked: enable</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_IDs</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+            <span class="c1"># disable</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"Create Navigation"</span><span class="p">:</span>
+            <span class="c1"># "Create navigation?" is checked: enable</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+                <span class="c1"># when this function is called from readIni(), the buttons would be reset instead of staying in the configuration saved in the .ini file without this if-check</span>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()</span> <span class="o">==</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()</span> <span class="o">==</span> <span class="kc">False</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="c1"># disable</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"Add Tooltips"</span><span class="p">:</span>
+            <span class="c1"># "Add tooltips to footnotes?" is checked: enable</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_tooltips</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">label_tooltip_abbreviate</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+            <span class="c1"># disable</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">label_tooltip_abbreviate</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"Number Paragraphs"</span><span class="p">:</span>
+            <span class="c1"># "Number the paragraphs?" is checked: enable</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_paragraphs</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">label_detect_ignore_pnum</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">detect_ignore_pnum</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">detect_ignore_pnum</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="c1"># disable</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">label_detect_ignore_pnum</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">detect_ignore_pnum</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">detect_ignore_pnum</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s2">"Insert Page"</span><span class="p">:</span>
+            <span class="c1"># "Insert page numbers?" is checked: enable</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">insert_page_no</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">label_first_page</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">first_page</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">first_page</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="c1"># disable</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">label_first_page</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">first_page</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">"color: "</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled_color</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">first_page</span><span class="o">.</span><span class="n">setReadOnly</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="MainWindow.saveOptions">
+<a class="viewcode-back" href="../SciDocx2WebUI.html#SciDocx2WebUI.MainWindow.saveOptions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">saveOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">'''"Save options" button:</span>
+<span class="sd">    </span>
+<span class="sd">        Writes current settings to the INI file and display a message stating that settings has been saved successfully.'''</span>
+
+        <span class="c1"># read .ini file</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">iniLocation</span><span class="p">)</span>
+
+        <span class="c1"># set to new values</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Body and head"</span><span class="p">,</span> <span class="s2">"bodyCheckVar"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check_body_only</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()))</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Body and head'</span><span class="p">,</span> <span class="s1">'csscheckvar'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check_css</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()))</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Body and head'</span><span class="p">,</span> <span class="s1">'javascriptcheckvar'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">check_javascript</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()))</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Body and head"</span><span class="p">,</span> <span class="s2">"pagetitleentrytext"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">page_title</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Heading IDs and nav"</span><span class="p">,</span> <span class="s2">"headingsidvar"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_IDs</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()))</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Heading IDs and nav"</span><span class="p">,</span> <span class="s2">"navigationvar"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()))</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Heading IDs and nav"</span><span class="p">,</span> <span class="s2">"navigationtypepar"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()))</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Heading IDs and nav"</span><span class="p">,</span> <span class="s2">"navigationtypebut"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()))</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Tooltips'</span><span class="p">,</span> <span class="s1">'tooltipscheckvar'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_tooltips</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()))</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Tooltips'</span><span class="p">,</span> <span class="s1">'abbreviatetooltipsentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Citability'</span><span class="p">,</span> <span class="s1">'paragraphnumbercheckvar'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_paragraphs</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()))</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Citability'</span><span class="p">,</span> <span class="s1">'pagenumbercheckvar'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">insert_page_no</span><span class="o">.</span><span class="n">isChecked</span><span class="p">()))</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Citability'</span><span class="p">,</span> <span class="s1">'pagenumberstartcheckvar'</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_page</span><span class="o">.</span><span class="n">text</span><span class="p">()))</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectheadingsentry1'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings1</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectheadingsentry2'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings2</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectheadingsentry3'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings3</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectimagesentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_images</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'imagesdimensionsentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">images_dimensions</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectvideosentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_videos</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'videosdimensionsentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">video_dimensions</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectaudioentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_audio</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectMediaentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_media</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detecttablecaptionsentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_tables</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectblockquotesentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_blockquotes</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectbibliographyentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_bibliography</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectignorepnumentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_ignore_pnum</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectcodeentry'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_code</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'customstylemap'</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">additional_styles</span><span class="o">.</span><span class="n">toPlainText</span><span class="p">())</span>
+
+        <span class="c1"># write .ini file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">iniLocation</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">configFile</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">configFile</span><span class="p">)</span>
+
+        <span class="n">QMessageBox</span><span class="o">.</span><span class="n">information</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"Saved"</span><span class="p">,</span> <span class="s2">"Settings have been saved."</span><span class="p">)</span>
+
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="MainWindow.resetOptions">
+<a class="viewcode-back" href="../SciDocx2WebUI.html#SciDocx2WebUI.MainWindow.resetOptions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resetOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">'''"Reset options" button:</span>
+<span class="sd">    </span>
+<span class="sd">        Asks the user if they really want to reset the current options.</span>
+
+<span class="sd">        If yes: Resets options to their factory state. Updates the GUI, writes new settings to the INI file and displays a message stating that settings have been reset successfully.'''</span>
+
+        <span class="n">reallyReset</span> <span class="o">=</span> <span class="n">QMessageBox</span><span class="o">.</span><span class="n">question</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'Reset options'</span><span class="p">,</span> <span class="s1">'Are you sure you want to reset the options to their factory settings? Current settings will be overwritten.'</span><span class="p">,</span> <span class="n">QMessageBox</span><span class="o">.</span><span class="n">StandardButton</span><span class="o">.</span><span class="n">Yes</span> <span class="o">|</span> <span class="n">QMessageBox</span><span class="o">.</span><span class="n">StandardButton</span><span class="o">.</span><span class="n">No</span><span class="p">,</span> <span class="n">QMessageBox</span><span class="o">.</span><span class="n">StandardButton</span><span class="o">.</span><span class="n">No</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">reallyReset</span> <span class="o">==</span> <span class="n">QMessageBox</span><span class="o">.</span><span class="n">StandardButton</span><span class="o">.</span><span class="n">Yes</span><span class="p">:</span>
+            <span class="c1"># read .ini file</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">iniLocation</span><span class="p">)</span>
+
+            <span class="c1"># reset to default values</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Body and head"</span><span class="p">,</span> <span class="s2">"bodyCheckVar"</span><span class="p">,</span> <span class="s2">"True"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Body and head'</span><span class="p">,</span> <span class="s1">'csscheckvar'</span><span class="p">,</span> <span class="s2">"False"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Body and head'</span><span class="p">,</span> <span class="s1">'javascriptcheckvar'</span><span class="p">,</span> <span class="s2">"False"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Body and head"</span><span class="p">,</span> <span class="s2">"pagetitleentrytext"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Heading IDs and nav"</span><span class="p">,</span> <span class="s2">"headingsidvar"</span><span class="p">,</span> <span class="s2">"True"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Heading IDs and nav"</span><span class="p">,</span> <span class="s2">"navigationvar"</span><span class="p">,</span> <span class="s2">"False"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Heading IDs and nav"</span><span class="p">,</span> <span class="s2">"navigationtypepar"</span><span class="p">,</span> <span class="s2">"True"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">"Heading IDs and nav"</span><span class="p">,</span> <span class="s2">"navigationtypebut"</span><span class="p">,</span> <span class="s2">"False"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectheadingsentry1'</span><span class="p">,</span> <span class="s2">"FVMW Heading"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectheadingsentry2'</span><span class="p">,</span> <span class="s2">"FVMW Heading2"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectheadingsentry3'</span><span class="p">,</span> <span class="s2">"FVMW Heading3"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectimagesentry'</span><span class="p">,</span> <span class="s2">"FVMW Image"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'imagesdimensionsentry'</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectvideosentry'</span><span class="p">,</span> <span class="s2">"FVMW Video"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'videosdimensionsentry'</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectaudioentry'</span><span class="p">,</span> <span class="s2">"FVMW Audio"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectMediaentry'</span><span class="p">,</span> <span class="s2">"FVMW Media"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectblockquotesentry'</span><span class="p">,</span> <span class="s2">"FVMW Blockquote"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detecttablecaptionsentry'</span><span class="p">,</span> <span class="s2">"FVMW TableCaption"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectbibliographyentry'</span><span class="p">,</span> <span class="s2">"FVMW Bibliography"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectignorepnumentry'</span><span class="p">,</span> <span class="s2">"FVMW IgnorePNum"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'detectcodeentry'</span><span class="p">,</span> <span class="s2">"FVMW Code"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Format templates'</span><span class="p">,</span> <span class="s1">'customstylemap'</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Tooltips'</span><span class="p">,</span> <span class="s1">'tooltipscheckvar'</span><span class="p">,</span> <span class="s2">"True"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Tooltips'</span><span class="p">,</span> <span class="s1">'abbreviatetooltipsentry'</span><span class="p">,</span> <span class="s2">"500"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Citability'</span><span class="p">,</span> <span class="s1">'paragraphnumbercheckvar'</span><span class="p">,</span> <span class="s2">"True"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Citability'</span><span class="p">,</span> <span class="s1">'pagenumbercheckvar'</span><span class="p">,</span> <span class="s2">"False"</span><span class="p">)</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s1">'Citability'</span><span class="p">,</span> <span class="s1">'pagenumberstartcheckvar'</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">)</span>
+
+            <span class="c1"># write to file</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">iniLocation</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">configFile</span><span class="p">:</span>
+                <span class="n">config</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">configFile</span><span class="p">)</span>
+
+            <span class="c1"># Update GUI with reset values. Disabled/enabled states will be updated automatically</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_body_only</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_css</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">check_javascript</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">page_title</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_IDs</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_tooltips</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"500"</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">number_paragraphs</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insert_page_no</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">first_page</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"1"</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings1</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW Heading"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings2</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW Heading2"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings3</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW Heading3"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_images</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW Image"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">images_dimensions</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_videos</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW Video"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">video_dimensions</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_audio</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW Audio"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_media</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW Media"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_tables</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW Blockquote"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_blockquotes</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW TableCaption"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_bibliography</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW Bibliography"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_ignore_pnum</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW IgnorePNum"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">detect_code</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">"FVMW Code"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">additional_styles</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+            <span class="n">QMessageBox</span><span class="o">.</span><span class="n">information</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"Reset successful"</span><span class="p">,</span> <span class="s2">"Settings have been reset to original values."</span><span class="p">)</span>
+
+            <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="MainWindow.inputPathFunc">
+<a class="viewcode-back" href="../SciDocx2WebUI.html#SciDocx2WebUI.MainWindow.inputPathFunc">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inputPathFunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">'''"Browse" button:</span>
+
+<span class="sd">        Prompts the user to choose the file that shall be converted and replaces the input path field text with the path of the chosen file.'''</span>
+
+        <span class="c1"># delete current text in input field</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_file_path</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        
+        <span class="c1"># get input path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inputPath</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getOpenFileName</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># insert input path into field</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputPath</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputPath</span> <span class="o">!=</span> <span class="s2">""</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display_file_path</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputPath</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display_file_path</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># scroll view to the right-most part of the path text</span>
+
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="MainWindow.submitFunc">
+<a class="viewcode-back" href="../SciDocx2WebUI.html#SciDocx2WebUI.MainWindow.submitFunc">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">submitFunc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">'''"Convert" button:</span>
+
+<span class="sd">        Prompts the user to choose the output path. Starts the conversion process by calling "convertAndExport()".\n</span>
+<span class="sd">        Throws an error if no input file has been chosen yet.'''</span>
+
+        <span class="c1"># get output path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputPath</span> <span class="o">=</span> <span class="n">QFileDialog</span><span class="o">.</span><span class="n">getSaveFileName</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># start conversion process</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">inputPath</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputPath</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outputPath</span> <span class="o">!=</span> <span class="s2">""</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">convertAndExport</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">QMessageBox</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"No input file given"</span><span class="p">,</span> <span class="s2">"Choose an input file."</span><span class="p">)</span>
+
+        <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="MainWindow.convertAndExport">
+<a class="viewcode-back" href="../SciDocx2WebUI.html#SciDocx2WebUI.MainWindow.convertAndExport">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">convertAndExport</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">'''Converts a DOCX file to an HTML file and exports it by calling functions from SciDocx2WebConversion.py. Displays a "Success" message if conversion was successful.'''</span>
+
+        <span class="c1"># style map</span>
+        <span class="n">custom_style_map</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">style_map_func</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings1</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings2</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_headings3</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_images</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_videos</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_audio</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_media</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_blockquotes</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_tables</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_bibliography</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_ignore_pnum</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_paragraphs</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_code</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">additional_styles</span><span class="o">.</span><span class="n">toPlainText</span><span class="p">())</span>
+
+        <span class="c1"># import and enclose input file with tags</span>
+        <span class="nb">input</span> <span class="o">=</span> <span class="n">mammoth</span><span class="o">.</span><span class="n">convert_to_html</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputPath</span><span class="p">,</span> <span class="n">style_map</span><span class="o">=</span><span class="n">custom_style_map</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">enclose_body</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_body_only</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">page_title</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+
+        <span class="c1"># remove unwanted links that the text processor adds</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">remove_empty_elements</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">)</span>
+
+        <span class="c1"># create footnotes</span>
+        <span class="n">footnotes</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">create_footnotes_list</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+
+        <span class="c1"># abbreviate footnotes</span>
+        <span class="n">footnotesAbbr</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">abbreviate_footnotes</span><span class="p">(</span><span class="n">footnotes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+
+        <span class="c1"># add wbr to footnotes</span>
+        <span class="n">footnotesAbbr</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">add_wbr_footnotes</span><span class="p">(</span><span class="n">footnotesAbbr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tooltip_abbreviate</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+
+        <span class="c1"># insert footnotes into main text</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">insert_footnotes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_tooltips</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="n">bodyxml</span><span class="p">,</span> <span class="n">footnotesAbbr</span><span class="p">)</span>
+
+        <span class="c1"># adjust footnote sups</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">adjust_footnotes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_tooltips</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="n">bodyxml</span><span class="p">)</span>
+
+        <span class="c1"># separate bottom footnotes</span>
+        <span class="n">commentBottomFootnotes</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Comment</span><span class="p">(</span><span class="s1">' Bottom footnotes '</span><span class="p">)</span>
+        <span class="n">breakElement</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XML</span><span class="p">(</span><span class="s1">'&lt;br/&gt;'</span><span class="p">)</span>
+        <span class="n">hrElement</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">XML</span><span class="p">(</span><span class="s1">'&lt;hr/&gt;'</span><span class="p">)</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">footnotes_bottom_adjust</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="n">commentBottomFootnotes</span><span class="p">,</span> <span class="n">breakElement</span><span class="p">,</span> <span class="n">hrElement</span><span class="p">)</span>
+
+        <span class="c1"># add wbr to main text</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">add_wbr_text</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">)</span>
+
+        <span class="c1"># add heading IDs</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">add_Head_IDs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">add_IDs</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="n">bodyxml</span><span class="p">)</span>
+
+        <span class="c1"># create navigation</span>
+        <span class="n">findH1</span> <span class="o">=</span> <span class="n">bodyxml</span><span class="o">.</span><span class="n">xpath</span><span class="p">(</span><span class="s1">'.//*[self::h1 or self::h2 or self::h3]'</span><span class="p">)</span>
+        <span class="n">navigationElement</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">'nav'</span><span class="p">)</span>
+        <span class="n">commentNavigation</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Comment</span><span class="p">(</span><span class="s1">' Navigation '</span><span class="p">)</span>
+        <span class="n">h1Navigation</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">'h1'</span><span class="p">)</span>
+        <span class="n">h1Navigation</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s1">'Navigation'</span>
+        <span class="n">navGridDiv</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s1">'div'</span><span class="p">)</span>
+        <span class="n">navGridDiv</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s1">'class'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'navGrid'</span>
+        <span class="n">navGridDiv</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">create_navigation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">navigationPar</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">navigationBut</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="n">findH1</span><span class="p">,</span> <span class="n">navigationElement</span><span class="p">,</span> <span class="n">commentNavigation</span><span class="p">,</span> <span class="n">h1Navigation</span><span class="p">,</span> <span class="n">navGridDiv</span><span class="p">)</span>
+
+        <span class="c1"># add cite to blockquotes</span>
+        <span class="n">tooltiptextPath</span> <span class="o">=</span> <span class="s1">'.//a[contains(@id, "footnote-ref")]/sup'</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">add_cite</span><span class="p">(</span><span class="n">tooltiptextPath</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">,</span> <span class="n">footnotes</span><span class="p">)</span>
+
+        <span class="c1"># embed images</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">embed_images</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">images_dimensions</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+
+        <span class="c1"># embed videos</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">embed_videos</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">video_dimensions</span><span class="o">.</span><span class="n">text</span><span class="p">())</span>
+
+        <span class="c1"># embed audio</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">embed_audio</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">)</span>
+
+        <span class="c1"># add file insertion messages above mediacaptions</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">file_insertion_message</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">)</span>
+
+        <span class="c1"># move table captions</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">move_table_caption</span><span class="p">(</span><span class="n">bodyxml</span><span class="p">)</span>
+
+        <span class="c1"># create page breaks</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">page_breaks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">insert_page_no</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_page</span><span class="o">.</span><span class="n">text</span><span class="p">(),</span> <span class="n">bodyxml</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_body_only</span><span class="o">.</span><span class="n">isChecked</span><span class="p">())</span>
+
+        <span class="c1"># number paragraphs</span>
+        <span class="n">bodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">paragraph_numbering</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">number_paragraphs</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="n">bodyxml</span><span class="p">)</span>
+
+        <span class="c1"># create sections (haven't been able to figure this out yet)</span>
+        <span class="c1">#bodyxml = SciConvert.create_sections(bodyxml)</span>
+
+        <span class="c1"># assemble file</span>
+        <span class="n">exportableBodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">assemble_html</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">create_nav</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_body_only</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_css</span><span class="o">.</span><span class="n">isChecked</span><span class="p">(),</span> <span class="n">cssXML</span><span class="p">,</span> <span class="n">navGridDiv</span><span class="p">,</span> <span class="n">bodyxml</span><span class="p">,</span> <span class="n">javascriptXML</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_javascript</span><span class="o">.</span><span class="n">isChecked</span><span class="p">())</span>
+
+        <span class="c1"># unescape and escape HTML characters</span>
+        <span class="n">exportableBodyxml</span> <span class="o">=</span> <span class="n">SciConvert</span><span class="o">.</span><span class="n">escape_unescape</span><span class="p">(</span><span class="n">exportableBodyxml</span><span class="p">)</span>
+
+        <span class="c1"># write file</span>
+        <span class="n">SciConvert</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="n">exportableBodyxml</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputPath</span><span class="p">)</span>
+
+        <span class="n">QMessageBox</span><span class="o">.</span><span class="n">information</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"Success"</span><span class="p">,</span> <span class="s2">"The file has been converted successfully."</span><span class="p">)</span>
+
+        <span class="k">return</span></div>
+</div>
+
+
+
+
+<span class="c1">### CSS ###</span>
+<span class="c1"># body</span>
+<span class="n">bodycss</span> <span class="o">=</span> <span class="s1">'body {margin-left: 15%; margin-right: 15%;}'</span>
+
+<span class="c1"># tooltips</span>
+<span class="n">tooltipcss</span> <span class="o">=</span> <span class="s1">'''</span><span class="se">\n</span><span class="s1">/* Tooltip container */</span>
+<span class="s1">.tooltippop {</span>
+<span class="s1">position: relative;</span>
+<span class="s1">}</span>
+
+<span class="s1">/* Tooltip text */</span>
+<span class="s1">.tooltippop [role="tooltip"] {</span>
+<span class="s1">font-size: 12pt;</span>
+<span class="s1">visibility: hidden;</span>
+<span class="s1">width: max-content;</span>
+<span class="s1">max-width: 400px;</span>
+<span class="s1">background-color: #fff;</span>
+<span class="s1">color: #454545;</span>
+<span class="s1">text-align: left;</span>
+<span class="s1">padding: 5px 5px;</span>
+<span class="s1">border-radius: 5px;</span>
+<span class="s1">border: 2px solid black;</span>
+
+<span class="s1">/* Position the tooltip text */</span>
+<span class="s1">position: absolute;</span>
+<span class="s1">z-index: 1;</span>
+<span class="s1">bottom: 125%;</span>
+<span class="s1">left: 50%;</span>
+<span class="s1">margin-left: -60px;</span>
+
+<span class="s1">/* Fade in tooltip */</span>
+<span class="s1">opacity: 0;</span>
+<span class="s1">transition: opacity 0.3s;</span>
+<span class="s1">}</span>
+
+<span class="s1">/* Show the tooltip text when you mouse over the tooltip container */</span>
+<span class="s1">.tooltippop:hover [role="tooltip"] {</span>
+<span class="s1">visibility: visible;</span>
+<span class="s1">opacity: 1;</span>
+<span class="s1">}'''</span>
+
+<span class="c1"># grids</span>
+<span class="n">gridcss</span> <span class="o">=</span> <span class="s1">'''</span><span class="se">\n</span><span class="s1">/* Grid */</span>
+<span class="s1">.gridContainer {</span>
+<span class="s1">    display: grid;</span>
+<span class="s1">    gap: 50px 50px;</span>
+<span class="s1">    grid-template-columns: 12</span><span class="si">% 68%</span><span class="s1">;</span>
+<span class="s1">}</span>
+
+<span class="s1">.navGrid {</span>
+<span class="s1">    grid-column-start: 1; </span>
+<span class="s1">    grid-column-end: 2; </span>
+<span class="s1">    grid-row-start: 1; </span>
+<span class="s1">    grid-row-end: 2;</span>
+<span class="s1">    position: sticky;</span>
+<span class="s1">    top: 0;</span>
+<span class="s1">    align-self: start;</span>
+<span class="s1">    padding-right: 5%;</span>
+<span class="s1">    height: 100vh;</span>
+<span class="s1">    overflow: auto;</span>
+<span class="s1">}</span>
+
+<span class="s1">.mainGrid {</span>
+<span class="s1">    grid-column-start: 2; </span>
+<span class="s1">    grid-column-end: 3; </span>
+<span class="s1">    grid-row-start: 1; </span>
+<span class="s1">    grid-row-end: 2;</span>
+<span class="s1">}'''</span>
+
+<span class="c1"># paragraphs</span>
+<span class="n">paragraphcss</span> <span class="o">=</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">p {font-size: 18px; color: #454545; text-align: left; line-height: 2;}'</span>
+
+<span class="c1"># pagenumbers</span>
+<span class="n">pagenumbercss</span> <span class="o">=</span> <span class="s1">'.pagenumber {font-size: 14px; color: #454545; text-align: left; font-weight:400; background-color: #E7E7E7;}'</span>
+
+<span class="c1"># buttons</span>
+<span class="n">buttoncss</span> <span class="o">=</span> <span class="s1">'button {font-size: 14px; text-align: left; width: 100%;}</span><span class="se">\n</span><span class="s1">button a {display: block;}'</span>
+
+<span class="c1"># highlighted nav</span>
+<span class="n">highlightnavcss</span> <span class="o">=</span> <span class="s1">'nav p a.highlightnav {background-color: #D7D7D7;}</span><span class="se">\n</span><span class="s1">nav button a.active {background-color: #D7D7D7;}'</span>
+
+<span class="c1"># headings</span>
+<span class="n">headingcss</span> <span class="o">=</span> <span class="s1">'h1, h2, h3 {font-size: 28px; color: #454545; text-align: left; padding-top: 18px; padding-bottom: 6px;}'</span>
+
+<span class="c1"># links</span>
+<span class="n">linkscss</span> <span class="o">=</span> <span class="s1">'a:link {color: #0000ff; text-decoration:none;}</span><span class="se">\n</span><span class="s1">a:visited {color: #800080; text-decoration:none;}'</span>
+
+<span class="c1"># lists</span>
+<span class="n">listscss</span> <span class="o">=</span> <span class="s1">'li {font-size: 18px; color: #454545;}'</span>
+
+<span class="c1"># tables</span>
+<span class="n">tablecss</span> <span class="o">=</span> <span class="s1">'table {margin-top: 28px;}</span><span class="se">\n</span><span class="s1">table, th, td {border: 1px solid;}</span><span class="se">\n</span><span class="s1">td {padding: 0px 5px;}</span><span class="se">\n</span><span class="s1">caption {caption-side: bottom; text-align: left; font-size: 15px; color: #454545;}'</span>
+
+<span class="c1"># horizontal rules</span>
+<span class="n">hrcss</span> <span class="o">=</span> <span class="s1">'hr {margin-top: 28px;}'</span>
+
+<span class="c1"># blockquotes</span>
+<span class="n">blockquotecss</span> <span class="o">=</span> <span class="s1">'blockquote {display: block; font-size: 18px; color: #454545; text-align: left; padding-left: 5%; padding-right: 15%; padding-top: 18px; padding-bottom: 18px;}'</span>
+
+<span class="c1"># mediacaptions</span>
+<span class="n">mediacaptioncss</span> <span class="o">=</span> <span class="s1">'.mediacaption {display: block; font-size: 15px; color: #454545; text-align: left;}'</span>
+
+<span class="c1">#bibliography</span>
+<span class="n">bibliographycss</span> <span class="o">=</span> <span class="s1">'.bibliography {display: block; font-size: 18px; color: #454545; text-align: left; text-indent: -5%; margin-left: 5%;}'</span>
+
+<span class="c1"># assembly of css</span>
+<span class="n">css</span> <span class="o">=</span> <span class="s1">'&lt;style&gt;'</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">bodycss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">tooltipcss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">gridcss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">paragraphcss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">pagenumbercss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">buttoncss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">highlightnavcss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">headingcss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">linkscss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">listscss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">tablecss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">hrcss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">blockquotecss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">mediacaptioncss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">bibliographycss</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n</span><span class="s1">'</span> <span class="s1">'</span><span class="se">\t\t</span><span class="s1">&lt;/style&gt;'</span> <span class="o">+</span> <span class="s1">'</span><span class="se">\n\n</span><span class="s1">'</span>
+
+<span class="c1"># convert style code to XML element</span>
+<span class="n">cssXML</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">css</span><span class="p">)</span>
+
+
+<span class="c1">### JAVASCRIPT ###</span>
+<span class="n">javascript</span> <span class="o">=</span> <span class="s2">"""&lt;script&gt;</span>
+<span class="s2">function start() {</span>
+<span class="s2">    let h1Marker = document.querySelectorAll('h1[id*="heading"], h2[id*="heading"], h3[id*="heading"]');</span>
+<span class="s2">    let navPA = document.querySelectorAll('nav p a');</span>
+<span class="s2">    let navButA = document.querySelectorAll('nav button a');</span>
+
+<span class="s2">    window.addEventListener('scroll', () =&gt; {</span>
+<span class="s2">        let current = '';</span>
+
+<span class="s2">        h1Marker.forEach((section) =&gt; {</span>
+<span class="s2">            const sectionTop = section.offsetTop;</span>
+<span class="s2">            const sectionHeight = section.clientHeight;</span>
+
+<span class="s2">            if (pageYOffset &gt;= sectionTop - sectionHeight / 3) {</span>
+<span class="s2">                current = section.getAttribute('id');</span>
+<span class="s2">            }</span>
+<span class="s2">        });</span>
+<span class="s2">        navPA.forEach((a) =&gt; {</span>
+<span class="s2">            a.classList.remove("highlightnav");</span>
+<span class="s2">            if (a.getAttribute("href") == '#' + current) {</span>
+<span class="s2">                a.classList.add("highlightnav");</span>
+<span class="s2">            }</span>
+<span class="s2">        });</span>
+<span class="s2">        navButA.forEach((a) =&gt; {</span>
+<span class="s2">            a.classList.remove("highlightnav");</span>
+<span class="s2">            if (a.getAttribute("href") == '#' + current) {</span>
+<span class="s2">                a.classList.add("highlightnav");</span>
+<span class="s2">            }</span>
+<span class="s2">        });</span>
+<span class="s2">    });</span>
+<span class="s2">};</span>
+
+<span class="s2">window.addEventListener('load', () =&gt; {</span>
+<span class="s2">    start();</span>
+<span class="s2">});</span>
+<span class="s2">&lt;/script&gt;</span>
+<span class="s2">"""</span>
+<span class="n">javascriptXML</span> <span class="o">=</span> <span class="n">etree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">javascript</span><span class="p">)</span>
+
+<span class="c1">### CREATE GUI WINDOW ###</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">QApplication</span><span class="p">()</span>
+
+<span class="n">window</span> <span class="o">=</span> <span class="n">MainWindow</span><span class="p">()</span>
+<span class="n">window</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="n">app</span><span class="o">.</span><span class="n">exec</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Tim Reichert.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

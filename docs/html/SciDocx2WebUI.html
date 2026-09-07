@@ -1,0 +1,198 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SciDocx2WebUI module &mdash; SciDocx2Web 1.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=61243dd2"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="SciDocx2WebConversion module" href="SciDocx2WebConversion.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            SciDocx2Web
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">SciDocx2Web</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="SciDocx2WebConversion.html">SciDocx2WebConversion module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">SciDocx2WebUI module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#SciDocx2WebUI.MainWindow"><code class="docutils literal notranslate"><span class="pre">MainWindow</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#SciDocx2WebUI.MainWindow.convertAndExport"><code class="docutils literal notranslate"><span class="pre">MainWindow.convertAndExport()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#SciDocx2WebUI.MainWindow.inputPathFunc"><code class="docutils literal notranslate"><span class="pre">MainWindow.inputPathFunc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#SciDocx2WebUI.MainWindow.presetChangedFunc"><code class="docutils literal notranslate"><span class="pre">MainWindow.presetChangedFunc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#SciDocx2WebUI.MainWindow.readIni"><code class="docutils literal notranslate"><span class="pre">MainWindow.readIni()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#SciDocx2WebUI.MainWindow.resetOptions"><code class="docutils literal notranslate"><span class="pre">MainWindow.resetOptions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#SciDocx2WebUI.MainWindow.saveOptions"><code class="docutils literal notranslate"><span class="pre">MainWindow.saveOptions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#SciDocx2WebUI.MainWindow.staticMetaObject"><code class="docutils literal notranslate"><span class="pre">MainWindow.staticMetaObject</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#SciDocx2WebUI.MainWindow.submitFunc"><code class="docutils literal notranslate"><span class="pre">MainWindow.submitFunc()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">SciDocx2Web</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">SciDocx2Web</a></li>
+      <li class="breadcrumb-item active">SciDocx2WebUI module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/SciDocx2WebUI.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-SciDocx2WebUI">
+<span id="scidocx2webui-module"></span><h1>SciDocx2WebUI module<a class="headerlink" href="#module-SciDocx2WebUI" title="Link to this heading"></a></h1>
+<p>Convert scientific papers in DOCX format to HTML. See this project’s GitHub page for more info: <a class="reference external" href="https://github.com/Fulminis-ictus/SciDocx2Web">https://github.com/Fulminis-ictus/SciDocx2Web</a></p>
+<p>This module displays the GUI and calls SciDocx2WebConversion to start the actual conversion process.</p>
+<p>Documentation last updated: 2026.09.06</p>
+<p>Author: Tim Reichert</p>
+<p>Version: 1.2</p>
+<p>Uses and is dependent on Mammoth: <a class="reference external" href="https://github.com/mwilliamson/python-mammoth">https://github.com/mwilliamson/python-mammoth</a></p>
+<p>Makes use of dwasyl’s added page break detection functionailty: <a class="reference external" href="https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4">https://github.com/dwasyl/python-mammoth/commit/38777ee623b60e6b8b313e1e63f12dafd82b63a4</a></p>
+<p>This version of the program is built using Python 3.13.15, Mammoth 1.12.1 and lxml 6.1.3. Using other versions can result in errors, such as missing text.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="SciDocx2WebUI.MainWindow">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">SciDocx2WebUI.</span></span><span class="sig-name descname"><span class="pre">MainWindow</span></span><a class="reference internal" href="_modules/SciDocx2WebUI.html#MainWindow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebUI.MainWindow" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">QMainWindow</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="SciDocx2WebUI.MainWindow.convertAndExport">
+<span class="sig-name descname"><span class="pre">convertAndExport</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebUI.html#MainWindow.convertAndExport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebUI.MainWindow.convertAndExport" title="Link to this definition"></a></dt>
+<dd><p>Converts a DOCX file to an HTML file and exports it by calling functions from SciDocx2WebConversion.py. Displays a “Success” message if conversion was successful.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SciDocx2WebUI.MainWindow.inputPathFunc">
+<span class="sig-name descname"><span class="pre">inputPathFunc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebUI.html#MainWindow.inputPathFunc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebUI.MainWindow.inputPathFunc" title="Link to this definition"></a></dt>
+<dd><p>“Browse” button:</p>
+<p>Prompts the user to choose the file that shall be converted and replaces the input path field text with the path of the chosen file.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SciDocx2WebUI.MainWindow.presetChangedFunc">
+<span class="sig-name descname"><span class="pre">presetChangedFunc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebUI.html#MainWindow.presetChangedFunc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebUI.MainWindow.presetChangedFunc" title="Link to this definition"></a></dt>
+<dd><p>Enables or disables fields depending on what boxes are checked.</p>
+<p>Disables the “Page title” entry, “Add suggested css?” checkbox and “Add javascript to highlight navigation while scrolling?” checkbox if “Only export the body?” is checked. Does the opposite if it’s unchecked.</p>
+<p>Disables the “Create navigation?” checkbox and the “Paragraph” and “Button” radio buttons if “Add IDs to headings?” is unchecked. Does the opposite if it’s checked.</p>
+<p>Disables the “Paragraph” and “Button” radio buttons if “Create navigation?” is unchecked. Does the opposite if it’s checked.</p>
+<p>Disables the “Abbreviate tooltips after how many symbols?” input field if “Add tooltips to footnotes?” is unchecked. Does the opposite if it’s checked.</p>
+<p>Disables the “Detect paragraphs that should not be numbered…” input field if “Number the paragraphs?” is unchecked. Does the opposite if it’s checked.</p>
+<p>Disables the “Which docx page should be counted…” input field if “Insert page numbers?” is unchecked. Does the opposite if it’s checked.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SciDocx2WebUI.MainWindow.readIni">
+<span class="sig-name descname"><span class="pre">readIni</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebUI.html#MainWindow.readIni"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebUI.MainWindow.readIni" title="Link to this definition"></a></dt>
+<dd><p>Load settings from .ini file at startup.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SciDocx2WebUI.MainWindow.resetOptions">
+<span class="sig-name descname"><span class="pre">resetOptions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebUI.html#MainWindow.resetOptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebUI.MainWindow.resetOptions" title="Link to this definition"></a></dt>
+<dd><p>“Reset options” button:</p>
+<p>Asks the user if they really want to reset the current options.</p>
+<p>If yes: Resets options to their factory state. Updates the GUI, writes new settings to the INI file and displays a message stating that settings have been reset successfully.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SciDocx2WebUI.MainWindow.saveOptions">
+<span class="sig-name descname"><span class="pre">saveOptions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebUI.html#MainWindow.saveOptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebUI.MainWindow.saveOptions" title="Link to this definition"></a></dt>
+<dd><p>“Save options” button:</p>
+<p>Writes current settings to the INI file and display a message stating that settings has been saved successfully.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SciDocx2WebUI.MainWindow.staticMetaObject">
+<span class="sig-name descname"><span class="pre">staticMetaObject</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PySide6.QtCore.QMetaObject(&quot;MainWindow&quot;</span> <span class="pre">inherits</span> <span class="pre">&quot;QMainWindow&quot;:</span> <span class="pre">)</span></span><a class="headerlink" href="#SciDocx2WebUI.MainWindow.staticMetaObject" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SciDocx2WebUI.MainWindow.submitFunc">
+<span class="sig-name descname"><span class="pre">submitFunc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/SciDocx2WebUI.html#MainWindow.submitFunc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#SciDocx2WebUI.MainWindow.submitFunc" title="Link to this definition"></a></dt>
+<dd><p>“Convert” button:</p>
+<p>Prompts the user to choose the output path. Starts the conversion process by calling “convertAndExport()”.</p>
+<p>Throws an error if no input file has been chosen yet.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="SciDocx2WebConversion.html" class="btn btn-neutral float-left" title="SciDocx2WebConversion module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Tim Reichert.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

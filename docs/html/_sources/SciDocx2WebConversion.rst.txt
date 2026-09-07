@@ -1,0 +1,7 @@
+SciDocx2WebConversion module
+============================
+
+.. automodule:: SciDocx2WebConversion
+   :members:
+   :show-inheritance:
+   :undoc-members:

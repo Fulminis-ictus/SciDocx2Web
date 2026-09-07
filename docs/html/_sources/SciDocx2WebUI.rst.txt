@@ -1,0 +1,7 @@
+SciDocx2WebUI module
+====================
+
+.. automodule:: SciDocx2WebUI
+   :members:
+   :show-inheritance:
+   :undoc-members:
